@@ -1,0 +1,66 @@
+Solute;Solvent;SoluteSMILES;SolventSMILES;DeltaGsolv
+1,1,1-trichloroethane;water;CC(Cl)(Cl)Cl;O;0.9397069716784743
+hept-1-yne;water;CCCCCC#C;O;1.1451781112943
+hexan-1-ol;water;CCCCCCO;O;-0.1552721394387736
+morpholine;water;C1COCCN1;O;-0.8757215783448962
+N,N-dimethylmethanamine;water;CN(C)C;O;0.15683592073716407
+propanenitrile;water;CCC#N;O;-0.009621711356669248
+(E)-1,2-dichloroethene;water;C(=C/Cl)\Cl;O;0.7862538420919717
+2-nitropropane;water;CC(C)[N+](=O)[O-];O;0.17504222424742716
+[(2S)-butan-2-yl] nitrate;water;CC[C@H](C)O[N+](=O)[O-];O;0.5157601899394924
+(2S)-2-(6-methoxynaphthalen-2-yl)propanoic acid;water;C[C@@H](c1ccc2cc(ccc2c1)OC)C(=O)O;O;-1.6663953307906052
+(2R,3R,4R,5R)-hexane-1,2,3,4,5,6-hexol;water;C([C@H]([C@H]([C@@H]([C@@H](CO)O)O)O)O)O;O;-5.154202903256708
+cyclohepta-1,3,5-triene;water;C1C=CC=CC=C1;O;0.7316349315611826
+1,2-dichlorobenzene;water;c1ccc(c(c1)Cl)Cl;O;0.6354016130069352
+ethyl propanoate;water;CCC(=O)OCC;O;0.2920827468134037
+[(1R)-1,2,2-trifluoroethoxy]benzene;water;c1ccc(cc1)O[C@@H](C(F)F)F;O;0.6536079165171982
+3-methylbutanoic acid;water;CC(C)CC(=O)O;O;-0.5948243241865523
+2-chloropropane;water;CC(C)Cl;O;0.9241015686696774
+isoindole-1,3-dione;water;c1ccc2c(c1)C(=O)NC2=O;O;-1.510341300702636
+4-methoxy-N,N-dimethylbenzamide;water;CN(C)C(=O)c1ccc(cc1)OC;O;-1.8744673709078965
+1-(2-hydroxyethylamino)anthracene-9,10-dione;water;c1ccc2c(c1)C(=O)c3cccc(c3C2=O)NCCO;O;-2.706755531377064
+oxane;water;C1CCOCC1;O;0.17764312474889327
+2-methoxyaniline;water;COc1ccccc1N;O;-0.6026270256909508
+3-phenylpropan-1-ol;water;c1ccc(cc1)CCCO;O;-0.8106990658082425
+ethanamine;water;CCN;O;-0.18128114445343496
+5-chloro-1H-pyrimidine-2,4-dione;water;c1c(c(=O)[nH]c(=O)[nH]1)Cl;O;-3.6248734083946133
+2-iodopropane;water;CC(C)I;O;0.8694826581388884
+3-methylbutan-1-ol;water;CC(C)CCO;O;-0.1604739404417058
+(E)-hex-2-enal;water;CCC/C=C/C=O;O;0.03199269666678902
+bromomethylbenzene;water;c1ccc(cc1)CBr;O;0.3701097618573882
+methyl octanoate;water;CCCCCCCC(=O)OC;O;0.45854037890723714
+heptan-1-amine;water;CCCCCCCN;O;0.0033827911506614404
+pentanal;water;CCCCC=O;O;0.20105122926208865
+ethane-1,2-diol;water;C(CO)O;O;-1.4297133851571857
+azane;water;N;O;-0.1266622339226459
+1-acetyloxyethyl acetate;water;CC(OC(=O)C)OC(=O)C;O;-0.3035234680223438
+3-hydroxybenzonitrile;water;c1cc(cc(c1)O)C#N;O;-1.5207449027085007
+2-methoxy-4-methylphenol;water;Cc1ccc(c(c1)OC)O;O;-0.519398209644034
+(2S,5S)-2,5-dimethyloxolane;water;C[C@H]1CC[C@@H](O1)C;O;0.22966113477821623
+1,3,5-triazinane-2,4,6-trione;water;c1(=O)[nH]c(=O)[nH]c(=O)[nH]1;O;-3.70810222444153
+2-methoxy-2-methylpropane;water;CC(C)(C)OC;O;0.41432507038231264
+benzonitrile;water;c1ccc(cc1)C#N;O;-0.077245124394789
+fluoromethane;water;CF;O;0.9319042701740758
+1,4-dichlorobutane;water;C(CCCl)CCl;O;0.38571516486618507
+N,N-dimethylaniline;water;CN(C)c1ccccc1;O;0.0918134082005104
+naphthalen-2-amine;water;c1ccc2cc(ccc2c1)N;O;-0.9537485933888805
+methyl hexanoate;water;CCCCCC(=O)OC;O;0.34149985634126045
+1-chloro-2-methylbenzene;water;Cc1ccccc1Cl;O;0.6926214240391904
+(1R)-2,2,2-trichloro-1-dimethoxyphosphorylethanol;water;COP(=O)([C@H](C(Cl)(Cl)Cl)O)OC;O;-2.32442315766154
+methyl acetate;water;CC(=O)OC;O;0.17504222424742716
+(methyldisulfanyl)methane;water;CSSC;O;0.5131592894380262
+2-ethylpyrazine;water;CCc1cnccn1;O;-0.428366692092719
+chloro(difluoro)methane;water;C(F)(F)Cl;O;0.8590790561330237
+heptane;water;CCCCCCC;O;1.6835645150977923
+(ethyldisulfanyl)ethane;water;CCSSCC;O;0.562576398965883
+2,6-dimethylaniline;water;Cc1cccc(c1N)C;O;-0.3659450800575314
+methanethiol;water;CS;O;0.6770160210303935
+methyl 2,2,2-trifluoroacetate;water;COC(=O)C(F)(F)F;O;0.7030250260450549
+propan-2-yl acetate;water;CC(C)OC(=O)C;O;0.3024863488192683
+butanal;water;CCCC=O;O;0.16203772174009637
+pyrrolidine;water;C1CCNC1;O;-0.4361693935971175
+3,3,3-trimethoxypropanenitrile;water;COC(CC#N)(OC)OC;O;-0.675452239732003
+butyl 4-hydroxybenzoate;water;CCCCOC(=O)c1ccc(cc1)O;O;-1.2788611560721492
+(1S,5R)-2-methyl-5-prop-1-en-2-ylcyclohex-2-en-1-ol;water;CC1=CC[C@H](C[C@@H]1O)C(=C)C;O;-0.1656757414446382
+2,3,4-trimethylpentane;water;CC(C)C(C)C(C)C;O;1.6549546095816647
+cyclohexanol;water;C1CCC(CC1)O;O;-0.43096759259418504

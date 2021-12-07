@@ -1,0 +1,16 @@
+Can't Find:
+methyl3-methyl-4-thiomethoxyphenylthiophosphate  
+ethyl4-cyanophenylphenylthiophosphonate 
+dimethyl5-(4-chloro)bicyclo[3.2.0]heptylphosphat
+trimethylorthotrifluoroacetate
+
+
+What's Different with E and Z in N-methylacetamide?
+E-N-methylacetamide
+Z-N-methylacetamide
+
+'chlorotoluene' means '3-chlorotoluene' or '4-chlorotoluene'?(2-chlorotoluene already exits)
+Temporarily, seen as 3-chlorotoluene...
+
+which structure of 'xylene' should be used? 
+Use m-xylene, the main component.

@@ -1,0 +1,56 @@
+# For field details: https://phillytools.azurewebsites.net/reference/1_config_file.html
+description: PhillyTools ConfigFile Template for philly jobs
+
+# For more information on cluster hardware:
+# philly: https://phillywiki.azurewebsites.net/articles/Environment.html
+# dlts: https://dlts.azurewebsites.net/v2/htmlfiles/Overview/Clusters.html
+target:
+  service: amlk8s
+  name: itplabrr1cl1
+#target:
+#  service: aml
+#  name: australia1GPUcl
+
+storage:
+    input:
+        storage_account_name: msralascv2
+        container_name: ml-la
+        mount_dir: /blob2
+
+        #output:
+        #storage_account_name: msralaphilly2
+        #container_name: ml-la
+        #mount_dir: /blob2
+# Docker environment (repo/image:tag)
+# Install custom dependencies using the optional "setup" field
+# Additional Docker images: https://philly.visualstudio.com/_git/commonPhilly
+environment:
+  image: pytorch/pytorch1.6-py37-cuda10.1-apex-drug # ex: microsoft_pytorch:v1.2.0_gpu_cuda9.0_py36_release_gpuenv_hvd0.16.2
+#  image: aaronzark/fairseq:v0 # ex: microsoft_pytorch:v1.2.0_gpu_cuda9.0_py36_release_gpuenv_hvd0.16.2
+  # setup:
+  #  -  # ex: sudo apt-get install build-essential, pip install matplotlib --user
+
+# Experiment source code: one of "local_dir" or "remote_dir" is required.
+# $CONFIG_DIR is expanded to the directory of this config file.
+code:
+  local_dir: $CONFIG_DIR/ # ex: $CONFIG_DIR/src
+#code:
+#local_dir: ./scripts # ex: $CONFIG_DIR/src
+#code:
+#remote_dir:
+
+# Optional field.
+#data:
+#local_dir: # ex: $CONFIG_DIR/data
+
+# SKU usage: G1 (single GPU), G4 (quad GPU), 24G8 (24 RAM + octo GPU) etc...
+jobs:
+- name: test_aml # ex: train_iwslt14_deen_att0.1_relu0.1_QKV0.1_features0.1_delayer0_word0_seed1
+  sku: G1 # ex: G1
+  command:
+  - bash  ./scripts/run_new_saigin.sh 0
+#  - bash  /blob2/v-yutho/DrugPP_Test_AML/scripts/run_new_saigin.sh 0
+#- name: train_iwslt14_deen_att0_relu0.1_QKV0.1_features0.1_delayer0.1_wordmask0.2_seed2 # ex: train_iwslt14_deen_att0.1_relu0.1_QKV0.1_features0.1_delayer0_word0_seed1
+#  sku: G1 # ex: G1
+#  command:
+#  - bash  /blob2/v-wuzhe/Project/DropTransformer/bash/train_iwslt14.sh 0 de en deen 0 0.1 0.1 0.1 2

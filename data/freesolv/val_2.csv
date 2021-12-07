@@ -1,0 +1,64 @@
+Solute;Solvent;SoluteSMILES;SolventSMILES;DeltaGsolv
+(1S,2R)-1,2-dimethylcyclohexane;water;C[C@@H]1CCCC[C@@H]1C;O;1.4000663604379822
+trimethyl phosphate;water;COP(=O)(OC)OC;O;-1.2736593550692166
+(3S)-hexan-3-ol;water;CCC[C@H](CC)O;O;-0.06684152238892441
+1-acetyloxyethyl acetate;water;CC(OC(=O)C)OC(=O)C;O;-0.3035234680223438
+(4-chlorophenyl)sulfanylmethylsulfanyl-diethoxy-sulfanylidene-lambda5-phosphane;water;CCOP(=S)(OCC)SCSc1ccc(cc1)Cl;O;-0.7014612447466644
+chloro(difluoro)methane;water;C(F)(F)Cl;O;0.8590790561330237
+1-chloropentane;water;CCCCCCl;O;0.9631150761916696
+undecan-2-one;water;CCCCCCCCCC(=O)C;O;0.42993047339110957
+(2S)-2-(6-methoxynaphthalen-2-yl)propanoic acid;water;C[C@@H](c1ccc2cc(ccc2c1)OC)C(=O)O;O;-1.6663953307906052
+S-propyl N-butyl-N-ethylcarbamothioate;water;CCCCN(CC)C(=O)SCCC;O;0.04239629867265362
+1-bromoheptane;water;CCCCCCCBr;O;1.07755469825618
+N,N-dimethylmethanamine;water;CN(C)C;O;0.15683592073716407
+2-bromopropane;water;CC(C)Br;O;0.864280857135956
+methanol;water;CO;O;-0.3373351745414037
+methylsulfanylbenzene;water;CSc1ccccc1;O;0.27907824430607303
+N-propylpropan-1-amine;water;CCCNCCC;O;0.039795398171187525
+3-tert-butyl-5-chloro-6-methyl-1H-pyrimidine-2,4-dione;water;Cc1c(c(=O)n(c(=O)[nH]1)C(C)(C)C)Cl;O;-1.9082790774269567
+oct-1-ene;water;CCCCCCC=C;O;1.4884969774878312
+fluorobenzene;water;c1ccc(cc1)F;O;0.7810520410890393
+heptan-1-ol;water;CCCCCCCO;O;-0.1058550299109167
+acetonitrile;water;CC#N;O;-0.020025313362533843
+tetrachloromethane;water;C(Cl)(Cl)(Cl)Cl;O;1.0099312852180602
+diethyl (2R)-2-dimethoxyphosphinothioylsulfanylbutanedioate;water;CCOC(=O)C[C@H](C(=O)OCC)SP(=S)(OC)OC;O;-1.1306098274885787
+4-methoxy-N,N-dimethylbenzamide;water;CN(C)C(=O)c1ccc(cc1)OC;O;-1.8744673709078965
+1,1-diethoxyethane;water;CCOC(C)OCC;O;0.13602871672543498
+trimethoxymethane;water;COC(OC)OC;O;-0.1604739404417058
+but-1-yne;water;CCC#C;O;0.9475096731828727
+4-methylpyridine;water;Cc1ccncc1;O;-0.2931198660164792
+1,2-dimethoxybenzene;water;COc1ccccc1OC;O;-0.3971558860751252
+penta-1,4-diene;water;C=CCC=C;O;1.2310078278426828
+styrene;water;C=Cc1ccccc1;O;0.666612419024529
+1,2,3-trichloro-5-(2,5-dichlorophenyl)benzene;water;c1cc(c(cc1Cl)c2cc(c(c(c2)Cl)Cl)Cl)Cl;O;0.050199000177052124
+methyl 4-methoxybenzoate;water;COc1ccc(cc1)C(=O)OC;O;-0.3971558860751252
+butanenitrile;water;CCCC#N;O;0.04239629867265362
+propan-1-ol;water;CCCO;O;-0.27231266200475
+[(2S)-butan-2-yl] nitrate;water;CC[C@H](C)O[N+](=O)[O-];O;0.5157601899394924
+2-propan-2-ylsulfanylpropane;water;CC(C)SC(C)C;O;0.6744151205289274
+4-methylmorpholine;water;CN1CCOCC1;O;-0.6546450357202738
+cumene;water;CC(C)c1ccccc1;O;0.9110970661623468
+3-(dimethoxyphosphinothioylsulfanylmethyl)-1,2,3-benzotriazin-4-one;water;COP(=S)(OC)SCn1c(=O)c2ccccc2nn1;O;-1.6195791217642141
+propyl propanoate;water;CCCOC(=O)CC;O;0.35450435884859127
+2-methoxyethanol;water;COCCO;O;-0.7326720507642579
+2,3,7,8-tetrachlorodibenzo-p-dioxin;water;c1c2c(cc(c1Cl)Cl)Oc3cc(c(cc3O2)Cl)Cl;O;0.11262061221223958
+1,2,3,4,7-pentachlorodibenzo-p-dioxin;water;c1cc2c(cc1Cl)Oc3c(c(c(c(c3Cl)Cl)Cl)Cl)O2;O;-0.09024962690211993
+1,4-dimethylpiperazine;water;CN1CCN(CC1)C;O;-0.9823584989050083
+2-nitroaniline;water;c1ccc(c(c1)N)[N+](=O)[O-];O;-0.9277395883742191
+bromobenzene;water;c1ccc(cc1)Br;O;0.6093926079922737
+1-nitropropane;water;CCC[N+](=O)[O-];O;0.1204233137166381
+bromomethane;water;CBr;O;0.7758502400861071
+1-methylpiperazine;water;CN1CCNCC1;O;-1.0317756084328649
+4-methoxyaniline;water;COc1ccc(cc1)N;O;-0.9563494938903468
+2-methylphenol;water;Cc1ccccc1O;O;-0.5454072146586956
+(3R)-3-methylhexane;water;CCC[C@H](C)CC;O;1.693968117103657
+diethoxymethoxybenzene;water;CCOC(OCC)Oc1ccccc1;O;-0.3711468810604638
+3,3-dimethylpentane;water;CCC(C)(C)CC;O;1.6549546095816647
+1,4-dichloro-2-phenylbenzene;water;c1ccc(cc1)c2cc(ccc2Cl)Cl;O;0.349302557845659
+piperidine;water;C1CCNCC1;O;-0.33993607504287
+5-(2,4-difluorophenyl)-2-hydroxybenzoic acid;water;c1cc(c(cc1c2ccc(cc2F)F)C(=O)O)O;O;-1.455722390171847
+4-N-ethyl-6-methylsulfanyl-2-N-propan-2-yl-1,3,5-triazine-2,4-diamine;water;CCNc1nc(nc(n1)SC)NC(C)C;O;-1.0005648024152713
+1-aminoanthracene-9,10-dione;water;c1ccc2c(c1)C(=O)c3cccc(c3C2=O)N;O;-1.4661259921777114
+iodomethane;water;CI;O;0.757643936575844
+2-methylthiophene;water;Cc1cccs1;O;0.6301998120040029
+1-chlorobutane;water;CCCCCl;O;0.9475096731828727

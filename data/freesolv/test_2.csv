@@ -1,0 +1,66 @@
+Solute;Solvent;SoluteSMILES;SolventSMILES;DeltaGsolv
+2,2,4-trimethylpentane;water;CC(C)CC(C)(C)C;O;1.7407843261300475
+diethoxyphosphinothioylsulfanylmethylsulfanyl-diethoxy-sulfanylidene-lambda5-phosphane;water;CCOP(=S)(OCC)SCSP(=S)(OCC)OCC;O;-0.5974252246880184
+iodobenzene;water;c1ccc(cc1)I;O;0.5365673939512217
+(2R,5R)-2-methyl-5-prop-1-en-2-ylcyclohexan-1-one;water;C[C@@H]1CC[C@H](CC1=O)C(=C)C;O;0.013786393156526038
+2-ethoxyethyl acetate;water;CCOCCOC(=O)C;O;-0.39195408507219276
+3-ethylpyridine;water;CCc1cccnc1;O;-0.20468924896663027
+iodoethane;water;CCI;O;0.7966574440978362
+1-methyl-2-nitrobenzene;water;Cc1ccccc1[N+](=O)[O-];O;0.05800170168145052
+hexane;water;CCCCCC;O;1.6341474055699354
+(2S)-2-chlorobutane;water;CC[C@H](C)Cl;O;0.9891240812063311
+oxolane;water;C1CCOC1;O;0.0866116071975781
+1,2,3,4,7,8-hexachlorodibenzo-p-dioxin;water;c1c2c(cc(c1Cl)Cl)Oc3c(c(c(c(c3Cl)Cl)Cl)Cl)O2;O;0.024189995162390635
+butyl 4-hydroxybenzoate;water;CCCCOC(=O)c1ccc(cc1)O;O;-1.2788611560721492
+ethylbenzene;water;CCc1ccccc1;O;0.7836529415905055
+1-pyridin-3-ylethanone;water;CC(=O)c1cccnc1;O;-1.1592197330047063
+dibromomethane;water;C(Br)Br;O;0.47934758291896634
+1-chlorodibenzo-p-dioxin;water;c1ccc2c(c1)Oc3cccc(c3O2)Cl;O;0.07360710469024741
+1-iodoheptane;water;CCCCCCCI;O;1.059348394745917
+hex-1-ene;water;CCCCC=C;O;1.4000663604379822
+methoxymethane;water;COC;O;0.49235208542629705
+3,5-dimethylphenol;water;Cc1cc(cc(c1)O)C;O;-0.6416405332129429
+1-chlorohexane;water;CCCCCCCl;O;0.9891240812063311
+1-(2-hydroxyethylamino)anthracene-9,10-dione;water;c1ccc2c(c1)C(=O)c3cccc(c3C2=O)NCCO;O;-2.706755531377064
+propan-2-yl acetate;water;CC(C)OC(=O)C;O;0.3024863488192683
+3-phenylpropan-1-ol;water;c1ccc(cc1)CCCO;O;-0.8106990658082425
+3-methylbutan-1-ol;water;CC(C)CCO;O;-0.1604739404417058
+pentan-3-one;water;CCC(=O)CC;O;0.102217010206375
+octan-1-amine;water;CCCCCCCCN;O;0.039795398171187525
+butylbenzene;water;CCCCc1ccccc1;O;0.8850880611476852
+methyl benzoate;water;COC(=O)c1ccccc1;O;-0.03042891536839844
+2-hydroxybenzaldehyde;water;c1ccc(c(c1)C=O)O;O;-0.22809735347982554
+nitrobenzene;water;c1ccc(cc1)[N+](=O)[O-];O;-0.08244692539772143
+2-methylpropyl formate;water;CC(C)COC=O;O;0.4117241698808464
+3-methylbut-1-ene;water;CC(C)C=C;O;1.4650888729746359
+(methyldisulfanyl)methane;water;CSSC;O;0.5131592894380262
+2-fluorophenol;water;c1ccc(c(c1)O)F;O;-0.3867522840692606
+2,3-dimethylnaphthalene;water;Cc1cc2ccccc2cc1C;O;0.2660737417987423
+1,2,3,4,6,7,8,9-octachlorodibenzo-p-dioxin;water;c12c(c(c(c(c1Cl)Cl)Cl)Cl)Oc3c(c(c(c(c3Cl)Cl)Cl)Cl)O2;O;-0.18908384595783348
+1-bromopentane;water;CCCCCBr;O;0.9631150761916696
+triethyl phosphate;water;CCOP(=O)(OCC)OCC;O;-0.9615512948932791
+6-chloro-1H-pyrimidine-2,4-dione;water;c1c(=O)[nH]c(=O)[nH]c1Cl;O;-3.1281014126145794
+1-butoxybutane;water;CCCCOCCCC;O;0.7732493395846409
+pentan-3-ol;water;CCC(CC)O;O;-0.14226763693144268
+1,1,2-trichloroethane;water;C(C(Cl)Cl)Cl;O;0.47154488141456785
+(2R)-pentan-2-ol;water;CCC[C@@H](C)O;O;-0.15267123893730727
+1-bromo-2-chloroethane;water;C(CBr)Cl;O;0.48194848342043245
+2-chloro-4-hydroxy-3,5-dimethoxybenzaldehyde;water;COc1cc(c(c(c1O)OC)Cl)C=O;O;-1.034376508934331
+benzonitrile;water;c1ccc(cc1)C#N;O;-0.077245124394789
+(2,2-dimethyl-3H-1-benzofuran-7-yl) N-methylcarbamate;water;CC1(Cc2cccc(c2O1)OC(=O)NC)C;O;-1.510341300702636
+butane;water;CCCC;O;1.535313186514222
+1-benzylimidazole;water;c1ccc(cc1)Cn2ccnc2;O;-0.9953630014123389
+octan-1-ol;water;CCCCCCCCO;O;-0.07464422389332291
+heptan-4-one;water;CCCC(=O)CCC;O;0.22966113477821623
+2,6-dimethylaniline;water;Cc1cccc(c1N)C;O;-0.3659450800575314
+cyclopentene;water;C1CC=CC1;O;1.1347745092884354
+cyclohexanol;water;C1CCC(CC1)O;O;-0.43096759259418504
+1,2,4,5-tetrachlorobenzene;water;c1c(c(cc(c1Cl)Cl)Cl)Cl;O;0.6406034140098673
+1-phenylethanone;water;CC(=O)c1ccccc1;O;-0.20208834846516416
+1-methoxypropane;water;CCCOC;O;0.5573745979629507
+1,1-difluoroethane;water;CC(F)F;O;0.9605141756902035
+2-methoxypropane;water;CC(C)OC;O;0.46634308041163564
+2-nitropropane;water;CC(C)[N+](=O)[O-];O;0.17504222424742716
+2-methylpyridine;water;Cc1ccccn1;O;-0.21509285097249486
+1-chloro-2-methylbenzene;water;Cc1ccccc1Cl;O;0.6926214240391904
+2,2,2-trifluoroethanol;water;C(C(F)(F)F)O;O;-0.13186403492557808

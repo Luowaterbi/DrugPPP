@@ -1,0 +1,64 @@
+Solute;Solvent;SoluteSMILES;SolventSMILES;DeltaGsolv
+9H-fluorene;water;c1ccc-2c(c1)Cc3c2cccc3;O;0.11782241321517188
+trimethoxymethane;water;COC(OC)OC;O;-0.1604739404417058
+bromo(trifluoro)methane;water;C(F)(F)(F)Br;O;1.4546852709687714
+1,2,3,4,5-pentachloro-6-nitrobenzene;water;c1(c(c(c(c(c1Cl)Cl)Cl)Cl)Cl)N(=O)=O;O;-0.36854598055899745
+1,3,5-trichloro-2-phenylbenzene;water;c1ccc(cc1)c2c(cc(cc2Cl)Cl)Cl;O;0.42732957288964335
+3-chloroprop-1-ene;water;C=CCCl;O;0.8408727526227607
+butanenitrile;water;CCCC#N;O;0.04239629867265362
+(2R)-2-methylbutan-1-ol;water;CC[C@@H](C)CO;O;-0.1604739404417058
+hexan-1-ol;water;CCCCCCO;O;-0.1552721394387736
+dimethoxymethane;water;COCOC;O;0.22706023427675004
+(E)-oct-2-enal;water;CCCCC/C=C/C=O;O;0.0970152092034427
+methyl propanoate;water;CCC(=O)OC;O;0.22706023427675004
+4-hydroxybenzaldehyde;water;c1cc(ccc1C=O)O;O;-1.3074710615882768
+ethyl benzoate;water;CCOC(=O)c1ccccc1;O;0.04239629867265362
+phenanthrene;water;c1ccc2c(c1)ccc3c2cccc3;O;-0.020025313362533843
+1-amino-4-hydroxyanthracene-9,10-dione;water;c1ccc2c(c1)C(=O)c3c(ccc(c3C2=O)O)N;O;-1.4895340966909068
+chloro(difluoro)methane;water;C(F)(F)Cl;O;0.8590790561330237
+S-propyl N,N-dipropylcarbamothioate;water;CCCN(CCC)C(=O)SCCC;O;-0.08504782589918751
+pyridine-4-carbonitrile;water;c1cnccc1C#N;O;-0.5766180206762892
+1-nitropentane;water;CCCCC[N+](=O)[O-];O;0.2556701397928777
+3,4-dichlorophenol;water;c1cc(c(cc1O)Cl)Cl;O;-0.9069323843624899
+1,3,5-trichloro-2-(2,6-dichlorophenyl)benzene;water;c1cc(c(c(c1)Cl)c2c(cc(cc2Cl)Cl)Cl)Cl;O;0.47934758291896634
+2,6-dimethylaniline;water;Cc1cccc(c1N)C;O;-0.3659450800575314
+1,2,3,4-tetrachloro-5-phenylbenzene;water;c1ccc(cc1)c2cc(c(c(c2Cl)Cl)Cl)Cl;O;0.084010706696112
+4-nitroaniline;water;c1cc(ccc1N)N(=O)=O;O;-1.5649602112334253
+methyl 2-chloroacetate;water;COC(=O)CCl;O;-0.051236119380127634
+1,4-dichlorobenzene;water;c1cc(ccc1Cl)Cl;O;0.7264331305582502
+ethylbenzene;water;CCc1ccccc1;O;0.7836529415905055
+morpholine;water;C1COCCN1;O;-0.8757215783448962
+dimethyl sulfate;water;COS(=O)(=O)OC;O;-0.3373351745414037
+octan-1-ol;water;CCCCCCCCO;O;-0.07464422389332291
+1-ethyl-2-methylbenzene;water;CCc1ccccc1C;O;0.7680475385817086
+1,2,4-trichlorodibenzo-p-dioxin;water;c1ccc2c(c1)Oc3c(cc(c(c3O2)Cl)Cl)Cl;O;-0.06424062188745833
+3,3,3-trimethoxypropanenitrile;water;COC(CC#N)(OC)OC;O;-0.675452239732003
+2-methylpropanal;water;CC(C)C=O;O;0.24526653778701313
+1,2,3-trimethylbenzene;water;Cc1cccc(c1C)C;O;0.6744151205289274
+1,1,1,2-tetramethoxyethane;water;COCC(OC)(OC)OC;O;-0.5011919061337712
+1-bromo-4-methylbenzene;water;Cc1ccc(cc1)Br;O;0.6275989115025367
+1-aminoanthracene-9,10-dione;water;c1ccc2c(c1)C(=O)c3cccc(c3C2=O)N;O;-1.4661259921777114
+propanal;water;CCC=O;O;0.0970152092034427
+3-chlorophenol;water;c1cc(cc(c1)Cl)O;O;-0.7326720507642581
+1,1,2-trichloroethene;water;C(=C(Cl)Cl)Cl;O;0.8746844591418207
+1,3-dichlorobenzene;water;c1cc(cc(c1)Cl)Cl;O;0.7342358320626488
+cyclopentane;water;C1CCCC1;O;1.3012321413822687
+3-methylbutyl formate;water;CC(C)CCOC=O;O;0.43513227439404184
+butan-1-ol;water;CCCCO;O;-0.23850095548569014
+9,10-dihydroanthracene;water;c1ccc2c(c1)Cc3ccccc3C2;O;0.005983691652127647
+2-nitrooxyethyl nitrate;water;C(CO[N+](=O)[O-])O[N+](=O)[O-];O;-0.5011919061337712
+1-iodopentane;water;CCCCCI;O;0.952711474185805
+cycloheptanol;water;C1CCCC(CC1)O;O;-0.4361693935971175
+methylsulfanylbenzene;water;CSc1ccccc1;O;0.27907824430607303
+1,4-dimethylnaphthalene;water;Cc1ccc(c2c1cccc2)C;O;0.2556701397928777
+4-chlorophenol;water;c1cc(ccc1O)Cl;O;-0.8393089713243702
+hex-1-ene;water;CCCCC=C;O;1.4000663604379822
+2-acetyloxyethyl acetate;water;CC(=O)OCCOC(=O)C;O;-0.659846836723206
+cyclohexanone;water;C1CCC(=O)CC1;O;-0.28791806501354705
+diethoxymethoxybenzene;water;CCOC(OCC)Oc1ccccc1;O;-0.3711468810604638
+(2S)-2-(6-methoxynaphthalen-2-yl)propanoic acid;water;C[C@@H](c1ccc2cc(ccc2c1)OC)C(=O)O;O;-1.6663953307906052
+1,2-dibromoethane;water;C(CBr)Br;O;0.38311426436471885
+ethyl formate;water;CCOC=O;O;0.3232935528309975
+6-chloro-2-N,4-N-diethyl-1,3,5-triazine-2,4-diamine;water;CCNc1nc(nc(n1)Cl)NCC;O;-1.6689962312920712
+hexan-1-amine;water;CCCCCCN;O;-0.03823161687279695
+anisole;water;COc1ccccc1;O;0.35190345834712505
