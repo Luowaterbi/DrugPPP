@@ -11,8 +11,8 @@ raw_data/
 runs/
 log/
 Problem/
-.pk
-.p
+*.pk
+*.p
 
 
 # Distribution / packaging
