@@ -16,6 +16,7 @@ pip install sklearn
 ### Run!
 ```
 mkdir log
+mkdir runs
 ```
 
 #### Run our model: SAIGN
