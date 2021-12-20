@@ -51,8 +51,9 @@ class MoE(nn.Module):
         # 就是普通的MLP
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
         # 都初始化为0
-        self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True)
-        self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True)
+        self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
+
+        self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
 
         # 激活函数，relu的平滑版本
         self.softplus = nn.Softplus()
@@ -142,12 +143,12 @@ class MoE(nn.Module):
         """
         # @ 就是矩阵相乘 ，logit就是权值
         clean_logits = x @ self.w_gate
-        if self.noisy_gating:
+        if self.noisy_gating and train:
             raw_noise_stddev = x @ self.w_noise
             # softplus激活函数，*train是说当不train的时候，不加noise
-            noise_stddev = ((self.softplus(raw_noise_stddev) + noise_epsilon) * train)
+            noise_stddev = (self.softplus(raw_noise_stddev) + noise_epsilon)
             # 计算噪声，stddev只是随机数的权值
-            noisy_logits = clean_logits + (torch.randn_like(clean_logits) * noise_stddev)
+            noisy_logits = clean_logits + (torch.randn_like(clean_logits).to(self.device) * noise_stddev)
             logits = noisy_logits
         else:
             logits = clean_logits
@@ -160,11 +161,11 @@ class MoE(nn.Module):
         top_k_indices = top_indices[..., :self.k]
         top_k_gates = self.softmax(top_k_logits)
 
-        zeros = torch.zeros_like(logits, requires_grad=True)
+        zeros = torch.zeros_like(logits, requires_grad=True).to(self.device)
         # 只有对应experts有权值，其他experts对应位置权值为0
         # 因为topk返回的是k个值和k个坐标，用这k个值构建gates矩阵，就要按坐标填回去，所以用scatter
         # 所以scatter与topk应该可以说配套使用了，在哪一维用的topk，scatter的时候就设置这一维
-        gates = zeros.scatter(-1, top_k_indices, top_k_gates)
+        gates = zeros.scatter(-1, top_k_indices, top_k_gates).to(self.device)
 
         # print("noisy_gating=",self.noisy_gating)
         # print("k=",self.k)

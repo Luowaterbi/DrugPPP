@@ -92,7 +92,7 @@ def make_model(opt):
         dec_input = dec_d_model * 3  # joint feature is cat of 'two' input and relation node feature
     else:
         dec_input = dec_d_model * 2  # joint feature is cat of 'two' input
-    readout_layer = ReadoutLayer(dec_d_model, readout=opt.readout, moe=opt.mix)
+    readout_layer = ReadoutLayer(dec_d_model, mix_moe=opt.moe & opt.mix, readout=opt.readout)
 
     # make decoder
     if opt.decoder == 'reg':
@@ -103,7 +103,7 @@ def make_model(opt):
         raise NotImplementedError('Wrong decoder type: {}'.format(opt.decoder))
 
     model = SAIGNModel(opt, encoder, interactor, Solv_MoE, Solu_MOE, Mix_MoE, decoder)
-
+    print(model)
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
     init_model(opt, model)
@@ -514,10 +514,10 @@ def masked_sum(features, mask, dim):
 
 class ReadoutLayer(nn.Module):
     """ readout pair-wise features """
-    def __init__(self, d_input, readout='avg', moe=True):
+    def __init__(self, d_input, mix_moe, readout='avg'):
         super(ReadoutLayer, self).__init__()
         self.readout = readout
-        self.moe = True
+        self.mix_moe = mix_moe
         if readout == 'set2set':
             self.x1_readout = Set2Set(d_input, d_input * 2)
             self.x2_readout = Set2Set(d_input, d_input * 2)
@@ -549,6 +549,8 @@ class ReadoutLayer(nn.Module):
             x1, x2 = self.x1_readout(x1, mask1), self.x2_readout(x2, mask2)
             joint_feature = torch.cat((x1, x2), -1)
         elif self.readout == 'rn':
+            if self.mix_moe:
+                relation_features = torch.narrow(relation_features, dim=1, start=0, length=1).squeeze(1)  # shape [batch_size x emb_dim]
             joint_feature = relation_features
         elif self.readout == 'rn_avg':
             if x2 is None:
@@ -557,7 +559,7 @@ class ReadoutLayer(nn.Module):
             else:
                 x1, x2 = masked_mean(x1, mask1, dim=1), masked_mean(x2, mask2, dim=1)
                 node_feature = torch.cat((x1, x2), -1)
-            if self.moe:
+            if self.mix_moe:
                 relation_features = masked_mean(relation_features, relation_mask, dim=1)
             joint_feature = torch.cat((relation_features, node_feature), -1)
             # print('debug joint feature',  joint_feature.shape)
@@ -568,7 +570,7 @@ class ReadoutLayer(nn.Module):
             else:
                 x1, x2 = masked_sum(x1, mask1, dim=1), masked_sum(x2, mask2, dim=1)
                 node_feature = torch.cat((x1, x2), -1)
-            if self.moe:
+            if self.mix_moe:
                 relation_features = masked_sum(relation_features, relation_mask, dim=1)
             joint_feature = torch.cat((relation_features, node_feature), -1)
         elif self.readout == 'j_avg':

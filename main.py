@@ -60,7 +60,7 @@ parser.add_argument("--cross_dst", required=False, type=float, default=1e6, help
 
 # ====== encoder setting ======
 parser.add_argument('--encoder', required=False, default='gt', choices=['gt', 'mlp'], help="gt: graph transformer.")
-parser.add_argument('--enc_pair_type', required=False, default='', choices=['share', 'sep', 'joint'], help="share: share encoder for two input, " "sep: use different encoder for two input, " "joint: cat two input and send them to a single encoder")
+parser.add_argument('--enc_pair_type', required=False, default='sep', choices=['share', 'sep', 'joint'], help="share: share encoder for two input, " "sep: use different encoder for two input, " "joint: cat two input and send them to a single encoder")
 parser.add_argument('--enc_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--enc_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--enc_dropout', required=False, type=float, default=0.1, help="dropout rate")
@@ -73,17 +73,17 @@ parser.add_argument('--enc_scale_norm', required=False, default=False, action='s
 parser.add_argument("--no_dummy", default=False, action='store_true', help="remove dummy node in GT.")
 
 # ====== interactor setting ======
-parser.add_argument('--interactor', required=False, default='sa', choices=['sa', 'rn', 'rnsa', 'none'], help="sa: self-attentive, rn: relation node.")
+parser.add_argument('--interactor', required=False, default='rnsa', choices=['sa', 'rn', 'rnsa', 'none'], help="sa: self-attentive, rn: relation node.")
 parser.add_argument('--inter_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--inter_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--inter_dropout', required=False, type=float, default=0.1, help="dropout rate")
 parser.add_argument('--inter_norm', required=False, default='layer_norm', choices=['layer_norm', 'none'], help="")
 parser.add_argument('--type_emb', required=False, default='sep', choices=['sep', 'none'], help="different type emb for x1 and x2")
 parser.add_argument('--att_block', required=False, default='none', choices=['none', 'self'], help="block transformer attention, self to only keep inter attention")
-parser.add_argument('--inter_res', required=False, default='none', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
+parser.add_argument('--inter_res', required=False, default='no_inter', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
 
 # ====== MoE setting ======
-parser.add_argument('--moe', required=False, default=True, type=bool, help="whether use the MoE")
+parser.add_argument('--moe', required=False, default=False, type=bool, help="whether use the MoE")
 parser.add_argument('--mix', required=False, default=True, type=bool, help="whether use the mix gate")
 parser.add_argument('--num_experts', required=False, type=int, default=16, help="the num of experts")
 parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
@@ -94,7 +94,7 @@ parser.add_argument('--decoder', required=False, default='reg', choices=['reg', 
 parser.add_argument('--readout', required=False, default='rn_avg', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
 
 # ====== others ======
-parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
+parser.add_argument("--debug", default=True, action='store_true', help="debug model, only load few data.")
 
 opt = parser.parse_args()
 
