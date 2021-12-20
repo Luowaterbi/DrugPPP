@@ -103,7 +103,7 @@ def make_model(opt):
         raise NotImplementedError('Wrong decoder type: {}'.format(opt.decoder))
 
     model = SAIGNModel(opt, encoder, interactor, Solv_MoE, Solu_MOE, Mix_MoE, decoder)
-    print(model)
+    # print(model)
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
     init_model(opt, model)

@@ -5,7 +5,7 @@ echo eg: source run_bert_siamese.sh 3,4 stanford
 gpu_list=$1
 
 # Comment one of follow 2 to switch debugging status
-debug=--debug
+debug=
 # debug=
 
 # ======= dataset setting ======

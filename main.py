@@ -94,7 +94,7 @@ parser.add_argument('--decoder', required=False, default='reg', choices=['reg', 
 parser.add_argument('--readout', required=False, default='rn_avg', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
 
 # ====== others ======
-parser.add_argument("--debug", default=True, action='store_true', help="debug model, only load few data.")
+parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
 
 opt = parser.parse_args()
 
