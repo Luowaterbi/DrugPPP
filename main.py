@@ -33,8 +33,8 @@ parser.add_argument('--name', default='sagt', help="The name of the current runn
 parser.add_argument('--task', default='sol', choices=['ddi', 'sol'], help="the task of current running")
 parser.add_argument('--output_dir', default='./runs/', help="dir of trained models")
 parser.add_argument('--data_dir', default='./data/MNSOL/', help="dir of trained models")
-parser.add_argument('--train_file', default='train.csv', help="train file path")
-parser.add_argument('--valid_file', default='val.csv', help="valid file path")
+parser.add_argument('--train_file', default='train_0.csv', help="train file path")
+parser.add_argument('--valid_file', default='val_0.csv', help="valid file path")
 parser.add_argument('--test_file', default='', help="test file path")
 parser.add_argument('--y2id_file', default='', help="y2id dict path")
 
@@ -80,11 +80,18 @@ parser.add_argument('--inter_dropout', required=False, type=float, default=0.1, 
 parser.add_argument('--inter_norm', required=False, default='layer_norm', choices=['layer_norm', 'none'], help="")
 parser.add_argument('--type_emb', required=False, default='sep', choices=['sep', 'none'], help="different type emb for x1 and x2")
 parser.add_argument('--att_block', required=False, default='none', choices=['none', 'self'], help="block transformer attention, self to only keep inter attention")
-parser.add_argument('--inter_res', required=False, default='layer_norm', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
+parser.add_argument('--inter_res', required=False, default='none', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
+
+# ====== MoE setting ======
+parser.add_argument('--moe', required=False, default=True, type=bool, help="whether use the MoE")
+parser.add_argument('--mix', required=False, default=True, type=bool, help="whether use the mix gate")
+parser.add_argument('--num_experts', required=False, type=int, default=16, help="the num of experts")
+parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
+parser.add_argument('--moe_loss_coef', required=False, type=float, default=1e-2, help="the loss_load of MoE")
 
 # ====== decoder setting ======
 parser.add_argument('--decoder', required=False, default='reg', choices=['reg', 'cls'], help="reg: regression decoder, cls: classification decoder.")
-parser.add_argument('--readout', required=False, default='avg', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
+parser.add_argument('--readout', required=False, default='rn_avg', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
 
 # ====== others ======
 parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
@@ -120,7 +127,7 @@ def main():
         test_x1, test_x2, test_joint, test_y = load_raw_data(opt.task, test_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
 
     if debug:
-        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 20, 10, 2, 2, '[debug]' + opt.name
+        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 1000, 100, 50, 32, '[debug]' + opt.name
         train_x1, train_x2, train_joint, train_y = [d[:train_num] for d in (train_x1, train_x2, train_joint, train_y)]
         valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (valid_x1, valid_x2, valid_joint, valid_y)]
         if test_path:

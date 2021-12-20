@@ -6,13 +6,12 @@ from transformers import AdamW, get_linear_schedule_with_warmup as get_lwp
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import json
 
+
 class Trainer:
     def __init__(self):
         pass
 
-    def train(self, max_epochs, model, optimizer, scheduler, project_name, output_dir, tester, loss_fn,
-              train_loader, valid_loader, test_loader=None, show_loss=True, scheduler_type='lwp',
-              better_score=lambda x, y: x > y):
+    def train(self, max_epochs, model, optimizer, scheduler, project_name, output_dir, tester, loss_fn, train_loader, valid_loader, test_loader=None, show_loss=True, scheduler_type='lwp', better_score=lambda x, y: x > y):
         if test_loader:
             test_best_score = {"RMSE": 10000, "MAE": 10000}
         val_best_score = {"RMSE": 10000, "MAE": 10000}
@@ -23,10 +22,10 @@ class Trainer:
             for batch in train_loader:
                 optimizer.zero_grad()
                 inputs, label = batch[:-1], batch[-1]
-                pred = model(inputs)
+                pred, moe_loss = model(inputs)
                 # print('Debug pred {} {}, label {} {}'.format(pred.dtype, pred.shape, label.dtype, label.shape))
                 label = label.long() if type(loss_fn) == torch.nn.CrossEntropyLoss else label
-                loss = loss_fn(pred, label)
+                loss = loss_fn(pred, label) + moe_loss
                 loss.backward()
                 optimizer.step()
                 running_loss.append(loss.cpu().detach())
@@ -42,8 +41,7 @@ class Trainer:
             val_rmse_score, val_loss, val_mae_score, val_pred = tester.test(model, valid_loader)
             if scheduler_type == 'plateau':
                 scheduler.step(val_rmse_score)
-            print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f} lr:{:.6f}".format(
-                epoch + 1, np.mean(np.array(running_loss)), val_loss, val_rmse_score, val_mae_score, optimizer.param_groups[0]['lr']))
+            print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f} lr:{:.6f}".format(epoch + 1, np.mean(np.array(running_loss)), val_loss, val_rmse_score, val_mae_score, optimizer.param_groups[0]['lr']))
             if better_score(val_rmse_score, val_best_score["RMSE"]):
                 val_best_score["RMSE"] = val_rmse_score
                 torch.save(model.state_dict(), output_dir + "best_model_RMSE.pt")

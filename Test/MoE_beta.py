@@ -226,7 +226,7 @@ class MoE(nn.Module):
 
     # 只有在train的时候才加噪声，类似于dropout
     # 计算所有experts的权值和概率
-    def noisy_top_k_gating(self, x, train, noise_epsilon=1e-2):
+    def noisy_top_k_gating(self, x, train, noise_epsilon=1e-10):
         """Noisy top-k gating.
           See paper: https://arxiv.org/abs/1701.06538.
           Args:

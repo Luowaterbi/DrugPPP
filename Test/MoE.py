@@ -35,18 +35,15 @@ class MoE(nn.Module):
     hidden_size: an integer - hidden size of the experts
     noisy_gating: a boolean
     k: an integer - how many experts to use for each batch element
-    loss_coef: a scalar - multiplier on load-balancing losses
     """
-    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=True, k=4, loss_coef=1e-2):
+    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=True, k=4):
         super(MoE, self).__init__()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.noisy_gating = noisy_gating
         self.num_experts = num_experts
         self.output_size = output_size
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.k = k
-        self.loss_coef = loss_coef
         # instantiate experts
         # 就是普通的MLP
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
@@ -59,13 +56,9 @@ class MoE(nn.Module):
         # 在dim=1维做softmax
         self.softmax = nn.Softmax(-1)
         # 从均值为0，方差为1的离散正态分布随机采样
-        self.normal = Normal(torch.tensor([0.0]).to(self.device), torch.tensor([1.0]).to(self.device))
+        self.normal = Normal(torch.tensor([0.0]), torch.tensor([1.0]))
 
         assert (self.k <= self.num_experts)
-
-    def clean(self, features, mask):
-        mask = mask.long().unsqueeze(-1).expand(mask.shape[0], mask.shape[1], features.shape[-1])
-        return torch.mul(features, mask)
 
     def cv_squared(self, x):
         """The squared coefficient of variation of a sample.
@@ -81,7 +74,6 @@ class MoE(nn.Module):
         # if only num_experts = 1
         if x.shape[0] == 1:
             return torch.Tensor([0])
-        x = x[torch.nonzero(x, as_tuple=True)]
         return x.float().var() / (x.float().mean()**2 + eps)
 
     def _gates_to_load(self, gates):
@@ -92,7 +84,7 @@ class MoE(nn.Module):
         Returns:
         a float32 `Tensor` of shape [n]
         """
-        return (gates > 0).reshape(-1, self.num_experts).sum(0)
+        return (gates > 0).sum(0)
 
     # 计算所有expert的prob
     def _prob_in_top_k(self, clean_values, noisy_values, noise_stddev, noisy_top_values):
@@ -123,13 +115,12 @@ class MoE(nn.Module):
         # cdf概率分布函数
         prob_if_in = self.normal.cdf((clean_values - threshold_if_in) / noise_stddev)
         prob_if_out = self.normal.cdf((clean_values - threshold_if_out) / noise_stddev)
-        # 让 top 1～k 跟 top k+1 的差距大，top k+1～num_experts 跟 top k 的差距大
         prob = torch.where(is_in, prob_if_in, prob_if_out)
         return prob
 
     # 只有在train的时候才加噪声，类似于dropout
     # 计算所有experts的权值和概率
-    def noisy_top_k_gating(self, x, train, mask, noise_epsilon=1e-2):
+    def noisy_top_k_gating(self, x, train, noise_epsilon=1e-2):
         """Noisy top-k gating.
           See paper: https://arxiv.org/abs/1701.06538.
           Args:
@@ -142,10 +133,10 @@ class MoE(nn.Module):
         """
         # @ 就是矩阵相乘 ，logit就是权值
         clean_logits = x @ self.w_gate
-        if self.noisy_gating:
+        if self.noisy_gating and train:
             raw_noise_stddev = x @ self.w_noise
             # softplus激活函数，*train是说当不train的时候，不加noise
-            noise_stddev = ((self.softplus(raw_noise_stddev) + noise_epsilon) * train)
+            noise_stddev = (self.softplus(raw_noise_stddev) + noise_epsilon)
             # 计算噪声，stddev只是随机数的权值
             noisy_logits = clean_logits + (torch.randn_like(clean_logits) * noise_stddev)
             logits = noisy_logits
@@ -166,26 +157,21 @@ class MoE(nn.Module):
         # 所以scatter与topk应该可以说配套使用了，在哪一维用的topk，scatter的时候就设置这一维
         gates = zeros.scatter(-1, top_k_indices, top_k_gates)
 
-        # print("noisy_gating=",self.noisy_gating)
-        # print("k=",self.k)
-        # print("num_experts=",self.num_experts)
-        if self.noisy_gating and self.k < self.num_experts and train:
+        if self.noisy_gating and self.k < self.num_experts:
             # clean logits是 *没加噪声的* *所有* experts权值
             # noisy logits是加噪声的所有experts的权值
             # noisy stddev是噪声的权值
             # top logit是前 *k+1* 个experts的权值
-            prob = self._prob_in_top_k(clean_logits, noisy_logits, noise_stddev, top_logits)
-            prob = self.clean(prob, mask)
-            load = prob.sum(-2).sum(0)
+            load = (self._prob_in_top_k(clean_logits, noisy_logits, noise_stddev, top_logits)).sum(-2)
         else:
             load = self._gates_to_load(gates)
-        return self.clean(gates, mask), load
+        return gates, load
 
-    def forward(self, x, mask, train=True):
+    def forward(self, x, expand_size, train=True, loss_coef=1e-2):
         """Args:
-        x: [batch_size, ****, input_size]
+        x: tensor shape [batch_size, input_size]
         train: a boolean scalar.
-
+        loss_coef: a scalar - multiplier on load-balancing losses
 
         Returns:
         y: a tensor with shape [batch_size, output_size].
@@ -195,11 +181,11 @@ class MoE(nn.Module):
         """
         if len(x.size()) < 3:
             x = torch.unsqueeze(x, 1)
-        gates, load = self.noisy_top_k_gating(x, train, mask)
+        gates, load = self.noisy_top_k_gating(x, train)
         # calculate importance loss
         # importance = gates.sum(-2)
         loss = self.cv_squared(load)
-        loss *= self.loss_coef
+        loss *= loss_coef
 
         experts_index = torch.nonzero(gates, as_tuple=True)  # [num_used_experts, len(gates.shape)]
         experts_gate = gates[experts_index]  # [num_used_experts]
@@ -214,6 +200,6 @@ class MoE(nn.Module):
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
         experts_output = torch.cat(experts_output)  # [nus, output_size]
         experts_output *= experts_gate.unsqueeze(-1)  # [nus, output_size]
-        zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).cpu()  # [batch_size, ..., output_size]
-        zeros[experts_from] += experts_output.cpu()
-        return zeros.to(self.device), loss
+        zeros = torch.zeros(*(x.shape[:-2]), expand_size, self.output_size)  # [batch_size, ..., output_size]
+        zeros[experts_from] += experts_output.float()
+        return zeros, loss

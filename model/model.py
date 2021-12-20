@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-Author: Atma
+Author: Atma, Luowaterbi
 """
 import numpy as np
 import math
@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from model.graph_transformer import GraphTransformer, make_graph_transformer, Embeddings
 from torch.autograd import Variable
 from torch.nn.init import _calculate_fan_in_and_fan_out, _no_grad_normal_, _no_grad_uniform_
+from model.MoE import MoE
 
 
 # ====== Model definition ======
@@ -17,12 +18,23 @@ def make_model(opt):
     # make encoder
     if opt.encoder == 'gt':  # graph transformer
         encoder_class = GTEncoder if opt.enc_pair_type == 'joint' else PGTEncoder
-        encoder = encoder_class(
-            opt, d_features=opt.d_features, n_layer=opt.enc_n_layer, d_model=opt.d_model, n_head=opt.enc_n_head,
-            dropout=opt.enc_dropout, lambda_attention=opt.lambda_attention, lambda_distance=opt.lambda_distance,
-            trainable_lambda=opt.trainable_lambda, n_mlp=2, leaky_relu_slope=0.1, mlp_nonlinear='relu',
-            distance_matrix_kernel='softmax', use_edge_features=opt.use_edge, integrated_dst=opt.integrated_dst,
-            scale_norm=opt.enc_scale_norm, pair_type=opt.enc_pair_type)
+        encoder = encoder_class(opt,
+                                d_features=opt.d_features,
+                                n_layer=opt.enc_n_layer,
+                                d_model=opt.d_model,
+                                n_head=opt.enc_n_head,
+                                dropout=opt.enc_dropout,
+                                lambda_attention=opt.lambda_attention,
+                                lambda_distance=opt.lambda_distance,
+                                trainable_lambda=opt.trainable_lambda,
+                                n_mlp=2,
+                                leaky_relu_slope=0.1,
+                                mlp_nonlinear='relu',
+                                distance_matrix_kernel='softmax',
+                                use_edge_features=opt.use_edge,
+                                integrated_dst=opt.integrated_dst,
+                                scale_norm=opt.enc_scale_norm,
+                                pair_type=opt.enc_pair_type)
     elif opt.encoder == 'mlp':
         encoder = MLPEncoder(opt, d_features=opt.d_features, d_model=opt.d_model, dropout=opt.enc_dropout)
     else:
@@ -30,17 +42,44 @@ def make_model(opt):
 
     # make interactor
     if opt.interactor == 'sa':
-        interactor = SAInteractor(opt, n_layer=opt.inter_n_layer, d_model=opt.d_model, n_head=opt.inter_n_head,
-                                  d_mlp=opt.d_model, dropout=opt.inter_dropout, norm_type=opt.inter_norm,
-                                  type_emb=opt.type_emb, att_block=opt.att_block, res_interact=opt.inter_res)
+        interactor = SAInteractor(opt,
+                                  n_layer=opt.inter_n_layer,
+                                  d_model=opt.d_model,
+                                  n_head=opt.inter_n_head,
+                                  d_mlp=opt.d_model,
+                                  dropout=opt.inter_dropout,
+                                  norm_type=opt.inter_norm,
+                                  type_emb=opt.type_emb,
+                                  att_block=opt.att_block,
+                                  res_interact=opt.inter_res)
     elif opt.interactor == 'rnsa':
-        interactor = RNSAInteractor(opt, n_layer=opt.inter_n_layer, d_model=opt.d_model, n_head=opt.inter_n_head,
-                                    d_mlp=opt.d_model, dropout=opt.inter_dropout, norm_type=opt.inter_norm,
-                                    type_emb=opt.type_emb, att_block=opt.att_block, res_interact=opt.inter_res)
+        interactor = RNSAInteractor(opt,
+                                    n_layer=opt.inter_n_layer,
+                                    d_model=opt.d_model,
+                                    n_head=opt.inter_n_head,
+                                    d_mlp=opt.d_model,
+                                    dropout=opt.inter_dropout,
+                                    norm_type=opt.inter_norm,
+                                    type_emb=opt.type_emb,
+                                    att_block=opt.att_block,
+                                    res_interact=opt.inter_res)
     elif opt.interactor == 'rn':
         interactor = RNInteractor(opt)
     else:
         interactor = None
+
+    # make MoE
+    if opt.moe:
+        Solv_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
+        Solu_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
+        if opt.mix:
+            Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
+        else:
+            Mix_MoE = None
+    else:
+        Solv_MoE = None
+        Solu_MOE = None
+        Mix_MoE = None
 
     # make readout
     if interactor and opt.inter_res == 'cat' and opt.interactor not in ['rn']:
@@ -48,12 +87,12 @@ def make_model(opt):
     else:
         dec_d_model = opt.d_model
     if opt.readout in ['rn', 'j_avg']:
-        dec_input = dec_d_model  # joint feature is cat of 'two' input and relation node feature
+        dec_input = dec_d_model  # relation node feature
     elif opt.readout in ['rn_avg', 'rn_sum']:
         dec_input = dec_d_model * 3  # joint feature is cat of 'two' input and relation node feature
     else:
         dec_input = dec_d_model * 2  # joint feature is cat of 'two' input
-    readout_layer = ReadoutLayer(dec_d_model, readout=opt.readout)
+    readout_layer = ReadoutLayer(dec_d_model, readout=opt.readout, moe=opt.mix)
 
     # make decoder
     if opt.decoder == 'reg':
@@ -63,7 +102,7 @@ def make_model(opt):
     else:
         raise NotImplementedError('Wrong decoder type: {}'.format(opt.decoder))
 
-    model = SAIGNModel(opt, encoder, interactor, decoder)
+    model = SAIGNModel(opt, encoder, interactor, Solv_MoE, Solu_MOE, Mix_MoE, decoder)
 
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
@@ -75,14 +114,14 @@ def make_model(opt):
 def xavier_normal_small_init_(tensor, gain=1.):
     # type: (Tensor, float) -> Tensor
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
-    std = gain * math.sqrt(2.0 / float(fan_in + 4*fan_out))
+    std = gain * math.sqrt(2.0 / float(fan_in + 4 * fan_out))
     return _no_grad_normal_(tensor, 0., std)
 
 
 def xavier_uniform_small_init_(tensor, gain=1.):
     # type: (Tensor, float) -> Tensor
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
-    std = gain * math.sqrt(2.0 / float(fan_in + 4*fan_out))
+    std = gain * math.sqrt(2.0 / float(fan_in + 4 * fan_out))
     a = math.sqrt(3.0) * std  # Calculate uniform bounds from standard deviation
     return _no_grad_uniform_(tensor, -a, a)
 
@@ -107,26 +146,46 @@ class GTEncoder(nn.Module):
     A single Graph Transformer Encoder (GT), for joint input.
     f: joint_x1_x2 -> x1_x2_feature
     """
-
-    def __init__(self, opt, d_features, n_layer=2, d_model=128, n_head=8, dropout=0.1,
-                 lambda_attention=0.3, lambda_distance=0.3, trainable_lambda=False,
-                 n_mlp=2, leaky_relu_slope=0.0, mlp_nonlinear='relu', distance_matrix_kernel='softmax',
-                 use_edge_features=False, integrated_dst=False,
-                 scale_norm=False, pair_type='share'):
+    def __init__(self,
+                 opt,
+                 d_features,
+                 n_layer=2,
+                 d_model=128,
+                 n_head=8,
+                 dropout=0.1,
+                 lambda_attention=0.3,
+                 lambda_distance=0.3,
+                 trainable_lambda=False,
+                 n_mlp=2,
+                 leaky_relu_slope=0.0,
+                 mlp_nonlinear='relu',
+                 distance_matrix_kernel='softmax',
+                 use_edge_features=False,
+                 integrated_dst=False,
+                 scale_norm=False,
+                 pair_type='share'):
         super(GTEncoder, self).__init__()
         self.opt = opt
 
-        self.encoder = make_graph_transformer(
-            d_atom=d_features, N=n_layer, d_model=d_model, h=n_head, dropout=dropout,
-            lambda_attention=lambda_attention, lambda_distance=lambda_distance, trainable_lambda=trainable_lambda,
-            N_dense=n_mlp, leaky_relu_slope=leaky_relu_slope, dense_output_nonlinearity=mlp_nonlinear,
-            distance_matrix_kernel=distance_matrix_kernel, use_edge_features=use_edge_features,
-            integrated_distances=integrated_dst, scale_norm=scale_norm)
+        self.encoder = make_graph_transformer(d_atom=d_features,
+                                              N=n_layer,
+                                              d_model=d_model,
+                                              h=n_head,
+                                              dropout=dropout,
+                                              lambda_attention=lambda_attention,
+                                              lambda_distance=lambda_distance,
+                                              trainable_lambda=trainable_lambda,
+                                              N_dense=n_mlp,
+                                              leaky_relu_slope=leaky_relu_slope,
+                                              dense_output_nonlinearity=mlp_nonlinear,
+                                              distance_matrix_kernel=distance_matrix_kernel,
+                                              use_edge_features=use_edge_features,
+                                              integrated_distances=integrated_dst,
+                                              scale_norm=scale_norm)
 
     def forward(self, batch):
         node_emb, mask, adjacency, distance = batch
-        features = self.encoder.encode(
-            src=node_emb, src_mask=mask, adj_matrix=adjacency, distances_matrix=distance, edges_att=None)
+        features = self.encoder.encode(src=node_emb, src_mask=mask, adj_matrix=adjacency, distances_matrix=distance, edges_att=None)
         return features, None, mask, None
 
 
@@ -135,38 +194,66 @@ class PGTEncoder(nn.Module):
     A Pair-wise Graph Transformer (PGT) encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
-
-    def __init__(self, opt, d_features, n_layer=2, d_model=128, n_head=8, dropout=0.1,
-                 lambda_attention=0.3, lambda_distance=0.3, trainable_lambda=False,
-                 n_mlp=2, leaky_relu_slope=0.0, mlp_nonlinear='relu', distance_matrix_kernel='softmax',
-                 use_edge_features=False, integrated_dst=False,
-                 scale_norm=False, pair_type='share'):
+    def __init__(self,
+                 opt,
+                 d_features,
+                 n_layer=2,
+                 d_model=128,
+                 n_head=8,
+                 dropout=0.1,
+                 lambda_attention=0.3,
+                 lambda_distance=0.3,
+                 trainable_lambda=False,
+                 n_mlp=2,
+                 leaky_relu_slope=0.0,
+                 mlp_nonlinear='relu',
+                 distance_matrix_kernel='softmax',
+                 use_edge_features=False,
+                 integrated_dst=False,
+                 scale_norm=False,
+                 pair_type='share'):
         super(PGTEncoder, self).__init__()
         self.opt = opt
 
-        self.x1_encoder = make_graph_transformer(
-            d_atom=d_features, N=n_layer, d_model=d_model, h=n_head, dropout=dropout,
-            lambda_attention=lambda_attention, lambda_distance=lambda_distance, trainable_lambda=trainable_lambda,
-            N_dense=n_mlp, leaky_relu_slope=leaky_relu_slope, dense_output_nonlinearity=mlp_nonlinear,
-            distance_matrix_kernel=distance_matrix_kernel, use_edge_features=use_edge_features,
-            integrated_distances=integrated_dst, scale_norm=scale_norm)
+        self.x1_encoder = make_graph_transformer(d_atom=d_features,
+                                                 N=n_layer,
+                                                 d_model=d_model,
+                                                 h=n_head,
+                                                 dropout=dropout,
+                                                 lambda_attention=lambda_attention,
+                                                 lambda_distance=lambda_distance,
+                                                 trainable_lambda=trainable_lambda,
+                                                 N_dense=n_mlp,
+                                                 leaky_relu_slope=leaky_relu_slope,
+                                                 dense_output_nonlinearity=mlp_nonlinear,
+                                                 distance_matrix_kernel=distance_matrix_kernel,
+                                                 use_edge_features=use_edge_features,
+                                                 integrated_distances=integrated_dst,
+                                                 scale_norm=scale_norm)
 
         if pair_type == 'share':
             self.x2_encoder = self.x1_encoder
         else:
-            self.x2_encoder = make_graph_transformer(
-                d_atom=d_features, N=n_layer, d_model=d_model, h=n_head, dropout=dropout,
-                lambda_attention=lambda_attention, lambda_distance=lambda_distance, trainable_lambda=trainable_lambda,
-                N_dense=n_mlp, leaky_relu_slope=leaky_relu_slope, dense_output_nonlinearity=mlp_nonlinear,
-                distance_matrix_kernel=distance_matrix_kernel, use_edge_features=use_edge_features,
-                integrated_distances=integrated_dst, scale_norm=scale_norm)
+            self.x2_encoder = make_graph_transformer(d_atom=d_features,
+                                                     N=n_layer,
+                                                     d_model=d_model,
+                                                     h=n_head,
+                                                     dropout=dropout,
+                                                     lambda_attention=lambda_attention,
+                                                     lambda_distance=lambda_distance,
+                                                     trainable_lambda=trainable_lambda,
+                                                     N_dense=n_mlp,
+                                                     leaky_relu_slope=leaky_relu_slope,
+                                                     dense_output_nonlinearity=mlp_nonlinear,
+                                                     distance_matrix_kernel=distance_matrix_kernel,
+                                                     use_edge_features=use_edge_features,
+                                                     integrated_distances=integrated_dst,
+                                                     scale_norm=scale_norm)
 
     def forward(self, batch):
         node_emb1, mask1, adjacency1, distance1, node_emb2, mask2, adjacency2, distance2 = batch
-        x1_features = self.x1_encoder.encode(
-            src=node_emb1, src_mask=mask1, adj_matrix=adjacency1, distances_matrix=distance1, edges_att=None)
-        x2_features = self.x2_encoder.encode(
-            src=node_emb2, src_mask=mask2, adj_matrix=adjacency2, distances_matrix=distance2, edges_att=None)
+        x1_features = self.x1_encoder.encode(src=node_emb1, src_mask=mask1, adj_matrix=adjacency1, distances_matrix=distance1, edges_att=None)
+        x2_features = self.x2_encoder.encode(src=node_emb2, src_mask=mask2, adj_matrix=adjacency2, distances_matrix=distance2, edges_att=None)
         return x1_features, x2_features, mask1, mask2
 
 
@@ -175,7 +262,6 @@ class MLPEncoder(nn.Module):
     A pair-wise encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
-
     def __init__(self, opt, d_features, d_model=128, dropout=0.1, pair_type='share'):
         super(MLPEncoder, self).__init__()
         self.opt = opt
@@ -208,7 +294,6 @@ class RNInteractor(nn.Module):
             f: joint_features -> (x1', x2', I),
         where x1', x2' are interacted features and I is relation features (relation_node_features).
         """
-
     def __init__(self, opt, *args, **kwargs):
         super(RNInteractor, self).__init__()
 
@@ -227,7 +312,7 @@ class RNInteractor(nn.Module):
         """
         # todo: replace None in returns with extracted x1, x2 features
         relation_features = torch.narrow(x1, dim=1, start=0, length=1).squeeze(1)  # shape [batch_size x emb_dim]
-        return x1, None, relation_features
+        return x1, None, relation_features, x1, x1_mask
 
 
 class SAInteractor(nn.Module):
@@ -236,8 +321,7 @@ class SAInteractor(nn.Module):
     f: (x1, x2) -> (x1', x2', I),
     where x1', x2' are interacted features and I is relation features.
     """
-    def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1,
-                 norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
+    def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
         super(SAInteractor, self).__init__()
 
         self.att_block = att_block
@@ -292,7 +376,7 @@ class SAInteractor(nn.Module):
         if self.res_interact == 'cat':
             x1_prime = torch.cat((x1, x1_prime), dim=-1)
             x2_prime = torch.cat((x2, x2_prime), dim=-1)
-        return x1_prime, x2_prime, relation_features
+        return x1_prime, x2_prime, relation_features, interacted_feature, ~cat_mask
 
     def add_sep_emb(self, features, first_part=True):
         """
@@ -314,10 +398,8 @@ class SAInteractor(nn.Module):
 
 class RNSAInteractor(SAInteractor):
     """ Self-attentive interactor with relation node """
-    def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1,
-                 norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
-        super(RNSAInteractor, self).__init__(
-            opt, n_layer, d_model, n_head, d_mlp, dropout, norm_type, type_emb, att_block, res_interact)
+    def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
+        super(RNSAInteractor, self).__init__(opt, n_layer, d_model, n_head, d_mlp, dropout, norm_type, type_emb, att_block, res_interact)
         self.relation_emb = nn.Parameter(torch.randn(d_model, dtype=torch.float), requires_grad=True)
 
     def forward(self, x1, x2, x1_mask, x2_mask):
@@ -352,7 +434,7 @@ class RNSAInteractor(SAInteractor):
 
         # split feature
         interacted_feature = interacted_feature.permute(1, 0, 2)
-        relation_features = torch.narrow(interacted_feature, dim=1, start=0, length=1).squeeze(1) # shape [batch_size x emb_dim]
+        relation_features = torch.narrow(interacted_feature, dim=1, start=0, length=1).squeeze(1)  # shape [batch_size x emb_dim]
         x1_prime = torch.narrow(interacted_feature, dim=1, start=1, length=x1_end)
         x2_prime = torch.narrow(interacted_feature, dim=1, start=x1_end + 1, length=x2_end)
         if self.res_interact == 'cat':
@@ -361,7 +443,7 @@ class RNSAInteractor(SAInteractor):
         elif self.res_interact == 'no_inter':
             x1_prime = x1
             x2_prime = x2
-        return x1_prime, x2_prime, relation_features
+        return x1_prime, x2_prime, relation_features, interacted_feature, ~cat_mask
 
 
 class Set2Set(nn.Module):
@@ -399,8 +481,7 @@ class Set2Set(nn.Module):
         batch_size = embedding.size()[0]
         n = embedding.size()[1]
 
-        hidden = (torch.zeros(self.num_layers, batch_size, self.lstm_output_dim).cuda(),
-                  torch.zeros(self.num_layers, batch_size, self.lstm_output_dim).cuda())
+        hidden = (torch.zeros(self.num_layers, batch_size, self.lstm_output_dim).cuda(), torch.zeros(self.num_layers, batch_size, self.lstm_output_dim).cuda())
 
         q_star = torch.zeros(batch_size, 1, self.hidden_dim).cuda()
         for i in range(n):
@@ -433,9 +514,10 @@ def masked_sum(features, mask, dim):
 
 class ReadoutLayer(nn.Module):
     """ readout pair-wise features """
-    def __init__(self, d_input, readout='avg'):
+    def __init__(self, d_input, readout='avg', moe=True):
         super(ReadoutLayer, self).__init__()
         self.readout = readout
+        self.moe = True
         if readout == 'set2set':
             self.x1_readout = Set2Set(d_input, d_input * 2)
             self.x2_readout = Set2Set(d_input, d_input * 2)
@@ -445,7 +527,7 @@ class ReadoutLayer(nn.Module):
             self.x2_readout = self.x1_readout
             raise NotImplementedError("mask padding for set2set has not been added.")
 
-    def forward(self, x1, x2, mask1, mask2, relation_features=None):
+    def forward(self, x1, x2, mask1, mask2, relation_features=None, relation_mask=None):
         """
 
         Parameters
@@ -475,6 +557,8 @@ class ReadoutLayer(nn.Module):
             else:
                 x1, x2 = masked_mean(x1, mask1, dim=1), masked_mean(x2, mask2, dim=1)
                 node_feature = torch.cat((x1, x2), -1)
+            if self.moe:
+                relation_features = masked_mean(relation_features, relation_mask, dim=1)
             joint_feature = torch.cat((relation_features, node_feature), -1)
             # print('debug joint feature',  joint_feature.shape)
         elif self.readout == 'rn_sum':
@@ -484,6 +568,8 @@ class ReadoutLayer(nn.Module):
             else:
                 x1, x2 = masked_sum(x1, mask1, dim=1), masked_sum(x2, mask2, dim=1)
                 node_feature = torch.cat((x1, x2), -1)
+            if self.moe:
+                relation_features = masked_sum(relation_features, relation_mask, dim=1)
             joint_feature = torch.cat((relation_features, node_feature), -1)
         elif self.readout == 'j_avg':
             joint_feature = masked_mean(x1[:, 1:, :], mask1[:, 1:], dim=1)
@@ -499,12 +585,12 @@ class RegressionDecoder(nn.Module):
         super(RegressionDecoder, self).__init__()
         self.readout = readout
         self.map_layer = nn.Sequential(
-          nn.Linear(d_input, d_input),
-          nn.Tanh(),
-          nn.Linear(d_input, 1),
+            nn.Linear(d_input, d_input),
+            nn.Tanh(),
+            nn.Linear(d_input, 1),
         )
 
-    def forward(self, x1, x2, mask1, mask2, relation_features=None):
+    def forward(self, x1, x2, mask1, mask2, moe_loss, relation_features=None, relation_mask=None):
         """
 
         Parameters
@@ -519,9 +605,9 @@ class RegressionDecoder(nn.Module):
         -------
 
         """
-        joint_feature = self.readout(x1, x2, mask1, mask2, relation_features)
+        joint_feature = self.readout(x1, x2, mask1, mask2, relation_features, relation_mask)
         pred = self.map_layer(joint_feature).squeeze(-1)
-        return pred
+        return pred, moe_loss
 
 
 class ClassificationDecoder(nn.Module):
@@ -529,14 +615,9 @@ class ClassificationDecoder(nn.Module):
     def __init__(self, d_input, readout, num_tags):
         super(ClassificationDecoder, self).__init__()
         self.readout = readout
-        self.map_layer = nn.Sequential(
-            nn.Linear(d_input, d_input),
-            nn.ReLU(),
-            nn.Linear(d_input, num_tags),
-            nn.Softmax(dim=-1)
-        )
+        self.map_layer = nn.Sequential(nn.Linear(d_input, d_input), nn.ReLU(), nn.Linear(d_input, num_tags), nn.Softmax(dim=-1))
 
-    def forward(self, x1, x2, mask1, mask2, relation_features=None):
+    def forward(self, x1, x2, mask1, mask2, moe_loss, relation_features=None, relation_mask=None):
         """
 
         Parameters
@@ -551,9 +632,9 @@ class ClassificationDecoder(nn.Module):
         -------
 
         """
-        joint_feature = self.readout(x1, x2, mask1, mask2, relation_features)
+        joint_feature = self.readout(x1, x2, mask1, mask2, relation_features, relation_mask)
         pred = self.map_layer(joint_feature)
-        return pred
+        return pred, moe_loss
 
 
 # ====== full models ======
@@ -561,13 +642,15 @@ class SAIGNModel(nn.Module):
     """
     Self Attentive Interaction Graph Network for pair-wise prediction: f: (x1, x2) -> y
     """
-
-    def __init__(self, opt, encoder, interactor, decoder):
+    def __init__(self, opt, encoder, interactor, Solv_MoE, Solu_MoE, Mix_MoE, decoder):
         super(SAIGNModel, self).__init__()
         self.opt = opt
         self.encoder = encoder
         self.interactor = interactor
         self.decoder = decoder
+        self.Solv_MoE = Solv_MoE
+        self.Solu_MoE = Solu_MoE
+        self.Mix_MoE = Mix_MoE
 
     def forward(self, batch):
         """
@@ -581,9 +664,28 @@ class SAIGNModel(nn.Module):
         -------
         model prediction of current task.
         """
+        moe_loss = 0
         x1_features, x2_features, mask1, mask2 = self.encoder(batch)
+        if self.Solv_MoE:
+            x1_moe_features, x1_moe_loss = self.Solv_MoE(x1_features, mask1, train=self.training)
+            moe_loss += x1_moe_loss
+        else:
+            x1_moe_features = x1_features
+
+        if self.Solu_MoE:
+            x2_moe_features, x2_moe_loss = self.Solu_MoE(x2_features, mask2, train=self.training)
+            moe_loss += x2_moe_loss
+        else:
+            x2_moe_features = x2_features
+
+        cat_mask = None
+
         if self.interactor:
-            x1_features, x2_features, relation_features = self.interactor(x1_features, x2_features, mask1, mask2)
+            x1_features, x2_features, relation_features, cat_features, cat_mask = self.interactor(x1_features, x2_features, mask1, mask2)
+            if self.Mix_MoE:
+                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, self.training)
+                moe_loss += rn_moe_loss
         else:
             relation_features = None
-        return self.decoder(x1_features, x2_features, mask1, mask2, relation_features)
+
+        return self.decoder(x1_moe_features, x2_moe_features, mask1, mask2, moe_loss, relation_features, cat_mask)

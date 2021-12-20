@@ -16,7 +16,7 @@ class Tester:
         all_pred, all_label = [], []
         for batch in data_loader:
             inputs, label = batch[:-1], batch[-1]
-            pred = model(inputs)
+            pred, moe_loss = model(inputs)
             all_pred.append(pred)
             all_label.append(label)
         return self.metric_func(flatten(all_pred), flatten(all_label))
