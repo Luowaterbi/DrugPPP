@@ -14,7 +14,7 @@ import json
 import numpy as np
 
 # local imports
-from utils.data_loader import load_raw_data, construct_loader
+from utils.data_loader import FloatTensor, load_raw_data, construct_loader
 from utils.train import Trainer, make_optimizer_scheduler
 from utils.test import Tester, rmse_metrics, acc_metrics
 from model.model import SAIGNModel, make_model
@@ -83,20 +83,24 @@ parser.add_argument('--att_block', required=False, default='none', choices=['non
 parser.add_argument('--inter_res', required=False, default='no_inter', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
 
 # ====== MoE setting ======
-parser.add_argument('--moe', required=False, default=False, type=bool, help="whether use the MoE")
-parser.add_argument('--mix', required=False, default=True, type=bool, help="whether use the mix gate")
-parser.add_argument('--num_experts', required=False, type=int, default=16, help="the num of experts")
+parser.add_argument('--moe', required=False, default=0, type=int, help="whether use the MoE")
+parser.add_argument('--mix', required=False, default=1, type=int, help="whether use the mix gate")
+parser.add_argument('--moe_input', required=False, default='atom', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
+parser.add_argument('--noisy_gating', required=False, default=0, type=int, help="whether open the noisy gating")
+parser.add_argument('--num_experts', required=False, type=int, default=32, help="the num of experts")
 parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
-parser.add_argument('--moe_loss_coef', required=False, type=float, default=1e-2, help="the loss_load of MoE")
+parser.add_argument('--moe_loss_coef', required=False, type=float, default=1e-1, help="the loss_load of MoE")
+parser.add_argument('--moe_dropout', required=False, type=float, default=1e-1, help="the dropout prob of MoE")
 
 # ====== decoder setting ======
 parser.add_argument('--decoder', required=False, default='reg', choices=['reg', 'cls'], help="reg: regression decoder, cls: classification decoder.")
-parser.add_argument('--readout', required=False, default='rn_avg', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
+parser.add_argument('--readout', required=False, default='rn_sum', choices=['avg', 'set2set', 'rn', 'rn_avg', 'j_avg', 'rn_sum'], help="")
 
 # ====== others ======
 parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
 
 opt = parser.parse_args()
+
 
 random.seed(opt.seed)
 np.random.seed(opt.seed)
@@ -127,7 +131,7 @@ def main():
         test_x1, test_x2, test_joint, test_y = load_raw_data(opt.task, test_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
 
     if debug:
-        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 1000, 100, 50, 32, '[debug]' + opt.name
+        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 100, 100, 50, 32, '[debug]' + opt.name
         train_x1, train_x2, train_joint, train_y = [d[:train_num] for d in (train_x1, train_x2, train_joint, train_y)]
         valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (valid_x1, valid_x2, valid_joint, valid_y)]
         if test_path:
@@ -142,6 +146,7 @@ def main():
     else:
         test_loader = None
 
+    print(opt)
     model = make_model(opt)
     model.to(device)
 

@@ -5,16 +5,16 @@ echo eg: source run_bert_siamese.sh 3,4 stanford
 gpu_list=$1
 
 # Comment one of follow 2 to switch debugging status
-debug=--debug
-# debug=
+# debug=--debug
+debug=
 
 # ======= dataset setting ======
 dataset_lst=(MNSOL)
 
 # ====== train & test setting ======
 #seed_lst=(0)
-seed_lst=(0 1 2)
-data_lst=(0)
+seed_lst=(0 2 4)
+data_lst=(1)
 
 # lr_lst=(0.0005)
 lr_lst=(0.001)
@@ -22,7 +22,7 @@ lr_lst=(0.001)
 
 train_batch_size_lst=(32)
 
-epoch=100
+epoch=300
 
 optimizer=adam
 # optimizer=adamw
@@ -94,13 +94,14 @@ inter_norm_type_lst=(layer_norm)
 #att_block_lst=(self)
 att_block_lst=(none)
 
+compare=--compare
 # ------ MoE setting --------
-moe=0
+moe_lst=(0 1)
 mix=1
 num_experts_lst=(32)
 num_used_experts_lst=(4)
 moe_loss_coef_lst=(1e-1)
-moe_dropout=0.1
+moe_dropout=1e-1
 
 # ------ decoder setting -------
 
@@ -139,9 +140,15 @@ for dataset in ${dataset_lst[@]}; do
                                           for num_experts in ${num_experts_lst[@]}; do
                                             for num_used_experts in ${num_used_experts_lst[@]}; do
                                               for moe_loss_coef in ${moe_loss_coef_lst[@]}; do
+                                                for moe in ${moe_lst[@]}; do
                                                 # model names
-                                                # model_name=rnign.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.old_split.${debug}.without_moe
-                                                model_name=rnign.overfitting
+                                                if [ $moe -eq 1 ]; then
+                                                  compare=
+                                                else
+                                                  compare=--compare
+                                                fi
+
+                                                model_name=rnign.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.old_split.${debug}${compare}
                                                 runsdir=./runs/${dataset}/${model_name}
                                                 logdir=./log/${dataset}/${model_name}
                                                 if [ ! -d ${runsdir} ]; then
@@ -162,7 +169,6 @@ for dataset in ${dataset_lst[@]}; do
                                                     echo [CLI]
                                                     echo Model: ${model_name}
                                                     echo Task: ${file_mark}
-                                                    echo MOE: ${moe}
                                                     echo [CLI]
                                                     export OMP_NUM_THREADS=3 # threads num for each task
                                                     CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} \
@@ -170,7 +176,7 @@ for dataset in ${dataset_lst[@]}; do
                                                       --data_dir ./data/${dataset} \
                                                       --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
                                                       --train_file train_${data}.csv \
-                                                      --valid_file train_${data}.csv \
+                                                      --valid_file val_${data}.csv \
                                                       --batch_size ${train_batch_size} \
                                                       --max_epochs ${epoch} \
                                                       --lr ${lr} \
@@ -198,6 +204,7 @@ for dataset in ${dataset_lst[@]}; do
                                                       --num_experts ${num_experts} \
                                                       --num_used_experts ${num_used_experts} \
                                                       --moe_loss_coef ${moe_loss_coef} \
+                                                      --moe_dropout ${moe_dropout} \
                                                       --readout ${readout} \
                                                       --optimizer ${optimizer} \
                                                       --weight_decay ${weight_decay} \
@@ -212,6 +219,7 @@ for dataset in ${dataset_lst[@]}; do
                                                   done
                                                 done
                                                 python scripts/MyStaff/cal_avg.py ./runs/${dataset}/${model_name}/best.txt
+                                                done
                                               done
                                             done
                                           done

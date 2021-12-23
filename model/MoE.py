@@ -37,9 +37,10 @@ class MoE(nn.Module):
     k: an integer - how many experts to use for each batch element
     loss_coef: a scalar - multiplier on load-balancing losses
     """
-    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=True, k=4, loss_coef=1e-2):
+    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=False, k=4, loss_coef=1e-2, dropout=0.1):
         super(MoE, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print("noisy_gating=", noisy_gating)
         self.noisy_gating = noisy_gating
         self.num_experts = num_experts
         self.output_size = output_size
@@ -59,8 +60,10 @@ class MoE(nn.Module):
         self.softplus = nn.Softplus()
         # 在dim=1维做softmax
         self.softmax = nn.Softmax(-1)
+        self.sigmod = nn.Sigmoid()
         # 从均值为0，方差为1的离散正态分布随机采样
         self.normal = Normal(torch.tensor([0.0]).to(self.device), torch.tensor([1.0]).to(self.device))
+        self.dropout = nn.Dropout(dropout)
 
         assert (self.k <= self.num_experts)
 
@@ -198,9 +201,12 @@ class MoE(nn.Module):
             x = torch.unsqueeze(x, 1)
         gates, load = self.noisy_top_k_gating(x, train, mask)
         # calculate importance loss
-        # importance = gates.sum(-2)
-        loss = self.cv_squared(load)
-        loss *= self.loss_coef
+        if self.noisy_gating:
+            importance = gates.reshape(-1, self.num_experts).sum(-2)
+            loss = self.cv_squared(load) + self.cv_squared(importance)
+            loss *= self.loss_coef
+        else:
+            loss = 0
 
         experts_index = torch.nonzero(gates, as_tuple=True)  # [num_used_experts, len(gates.shape)]
         experts_gate = gates[experts_index]  # [num_used_experts]
@@ -210,6 +216,7 @@ class MoE(nn.Module):
         experts_from = list(experts_from[..., index_sorted_experts])  # [tensor(num_used_experts), tensor(num_used_experts)]
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
+        print("experts_count=", [i.tolist() for i in experts_count])
         experts_input = x[experts_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
@@ -217,4 +224,7 @@ class MoE(nn.Module):
         experts_output *= experts_gate.unsqueeze(-1)  # [nus, output_size]
         zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).cpu()  # [batch_size, ..., output_size]
         zeros[experts_from] += experts_output.cpu()
-        return zeros.to(self.device), loss
+        zeros = zeros.to(self.device)
+        zeros = self.dropout(self.sigmod(zeros)) + x
+        print("loss=", loss)
+        return zeros, loss

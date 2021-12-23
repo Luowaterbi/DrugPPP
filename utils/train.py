@@ -25,7 +25,7 @@ class Trainer:
                 pred, moe_loss = model(inputs)
                 # print('Debug pred {} {}, label {} {}'.format(pred.dtype, pred.shape, label.dtype, label.shape))
                 label = label.long() if type(loss_fn) == torch.nn.CrossEntropyLoss else label
-                loss = loss_fn(pred, label) + moe_loss
+                loss = loss_fn(pred, label)
                 loss.backward()
                 optimizer.step()
                 running_loss.append(loss.cpu().detach())

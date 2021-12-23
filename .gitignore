@@ -14,7 +14,7 @@ slurm/
 Problem/
 *.pk
 *.p
-
+*.out
 
 # Distribution / packaging
 .Python

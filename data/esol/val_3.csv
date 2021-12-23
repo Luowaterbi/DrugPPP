@@ -1,0 +1,113 @@
+Solute;Solvent;SoluteSMILES;SolventSMILES;DeltaGsolv
+diethoxy-(4-nitrophenoxy)-sulfanylidene-lambda5-phosphane;water;CCOP(=S)(OCC)Oc1ccc(cc1)N(=O)=O;O;-0.7682600990714127
+1,2-dihydroacenaphthylene;water;C1Cc2cccc3cccc1c23;O;-0.753943786943934
+2-methylpentan-1-ol;water;CCCC(C)CO;O;0.9258368360135493
+5-pentan-2-yl-5-prop-2-enyl-2-sulfanylidene-1,3-diazinane-4,6-dione;water;CCCC(C)C1(CC=C)C(=O)NC(=S)NC1=O ;O;-0.19560761397227056
+S-(2,3-dichloroprop-2-enyl) N,N-di(propan-2-yl)carbamothioate;water;CC(C)N(C(C)C)C(=O)SCC(=CCl)Cl;O;-0.5897834078821802
+picene;water;c1ccc2c(c1)ccc3c2ccc4c5ccccc5ccc43;O;-2.3001054967116175
+1-methyl-4-phenylbenzene;water;Cc1ccc(cc1)c2ccccc2;O;-0.7491716829014412
+17-ethynyl-10,17-dihydroxy-13-methyl-2,6,7,8,9,11,12,14,15,16-decahydro-1H-cyclopenta[a]phenanthren-3-one;water;CC34CCC1C(CCC2=CC(=O)CCC12O)C3CCC4(O)C#C;O;-0.7253111626889771
+1,3-dichlorobenzene;water;Clc1cccc(Cl)c1;O;0.004820755812429133
+1-chloro-4-methoxybenzene;water;COc1ccc(Cl)cc1;O;0.12889546091724335
+2,3-dimethylbutane;water;CC(C)C(C)C;O;-0.28627759077963466
+oxolane;water;C1CCOC1;O;1.6893734828124054
+4-methylbenzenesulfonamide;water;Cc1ccc(cc1)S(=O)(=O)N;O;0.6251942813364997
+urea;water;NC(=O)N;O;1.9136623728095692
+1-chloro-3-nitrobenzene;water;Clc1cccc(c1)N(=O)=O;O;0.1336675649597361
+3-amino-5,8-dimethylbenzo[b][1,4]benzoxazepin-6-one;water;O2c1ccc(N)cc1N(C)C(=O)c3cc(C)ccc23 ;O;-0.41894208316093595
+diethoxy-(ethylsulfanylmethylsulfanyl)-sulfanylidene-lambda5-phosphane;water;CCOP(=S)(OCC)SCSCC;O;-0.5057943767343059
+2-methyl-5-propan-2-ylphenol;water;c1(O)c(C)ccc(C(C)C)c1;O;0.4629427438917427
+ethyl nonanoate;water;CCCCCCCCC(=O)OCC;O;-0.3578591514170274
+butane-1-thiol;water;CCCCS;O;0.4152217034668142
+(2,5-dioxo-4,4-diphenylimidazolidin-1-yl)methyl heptanoate;water;O=C1N(COC(=O)CCCCCC)C(=O)C(N1)(c2ccccc2)c3ccccc3;O;-1.5513623724444894
+dichloromethane;water;ClCCl;O;1.1548978300532062
+2-methylpentane;water;CCCC(C)C;O;-0.32922652716207046
+butyl 4-aminobenzoate;water;CCCCOC(=O)c1ccc(N)cc1;O;-0.01522208116604075
+1-methyl-2,4-dinitrobenzene;water;Cc1ccc(cc1N(=O)=O)N(=O)=O;O;0.10980704474727193
+2-methyl-N-phenylfuran-3-carboxamide;water;Cc1occc1C(=O)Nc2ccccc2;O;-0.11925394929238488
+3-[4-(4-chlorophenoxy)phenyl]-1,1-dimethylurea;water;CN(C)C(=O)Nc2ccc(Oc1ccc(Cl)cc1)cc2;O;-0.878018492048748
+prop-2-enal;water;C=CC=O;O;1.7275503151523481
+ethyl N-[2-(4-phenoxyphenoxy)ethyl]carbamate;water;CCOC(=O)NCCOc2ccc(Oc1ccccc1)cc2;O;-0.787348515241384
+5-amino-4-bromo-2-phenylpyridazin-3-one;water;c1ccccc1n2ncc(N)c(Br)c2(=O);O;-0.036696549357258544
+N-phenylaniline;water;N(c1ccccc1)c2ccccc2;O;-0.21660487175923912
+S-ethyl N,N-bis(2-methylpropyl)carbamothioate;water;CCSC(=O)N(CC(C)C)CC(C)C;O;-0.30059390290711335
+1-methoxypropane;water;CCCOC;O;1.2694283270730344
+2,2,2-trichloroacetonitrile;water;ClC(Cl)(Cl)C#N;O;0.42094822831780565
+1,2,4-trichloro-5-(2,3-dichlorophenyl)benzene;water;Clc1cc(Cl)c(cc1Cl)c2cccc(Cl)c2Cl ;O;-1.9851466299070895
+1-chloro-2-methoxybenzene;water;COc1ccccc1Cl;O;0.2816027902770145
+ethylsulfanylethane;water;CCSCC;O;0.8160784430362137
+1-methyl-4-nitrobenzene;water;Cc1ccc(cc1)N(=O)=O;O;0.2672864781495358
+pentan-1-ol;water;CCCCCO;O;1.1692141421806845
+5,5-diphenylimidazolidine-2,4-dione;water;O=C1NC(=O)C(N1)(c2ccccc2)c3ccccc3;O;-0.49959064147906534
+5-(2-bicyclo[3.2.1]oct-2-enyl)-5-ethyl-1,3-diazinane-2,4,6-trione;water;CCC1(C(=O)NC(=O)NC1=O)C2=CCC3CCC2C3;O;0.16898113487418312
+11-hydroxy-17-(2-hydroxyacetyl)-10-methyl-3-oxo-1,2,6,7,8,9,11,12,14,15,16,17-dodecahydrocyclopenta[a]phenanthrene-13-carbaldehyde;water;CC13CCC(=O)C=C1CCC4C2CCC(C(=O)CO)C2(CC(O)C34)C=O ;O;-0.3817196716294918
+(2,3,5,6-tetrafluoro-4-methylphenyl)methyl 3-(2-chloro-3,3,3-trifluoroprop-1-enyl)-2,2-dimethylcyclopropane-1-carboxylate;water;Cc1c(F)c(F)c(COC(=O)C2C(C=C(Cl)C(F)(F)F)C2(C)C)c(F)c1F;O;-2.038116984778761
+1,2-xylene;water;Cc1ccccc1C;O;0.11935125283225764
+1,2-dichloropropane;water;CC(Cl)CCl;O;0.6920037379313996
+6-methyl-2-sulfanylidene-1H-pyrimidin-4-one;water;Cc1cc(=O)[nH]c(=S)[nH]1;O;0.2930558399789973
+[cyano-(3-phenoxyphenyl)methyl] 3-(2-chloro-3,3,3-trifluoroprop-1-enyl)-2,2-dimethylcyclopropane-1-carboxylate;water;CC1(C)C(C=C(Cl)C(F)(F)F)C1C(=O)OC(C#N)c2cccc(Oc3ccccc3)c2;O;-2.4461318804118988
+1-chloro-4-nitrobenzene;water;Clc1ccc(cc1)N(=O)=O;O;0.06208600432234339
+N,N-dimethylacetamide;water;CN(C)C(=O)C;O;1.9852439334469623
+3-chloropropanenitrile;water;ClCCC#N ;O;1.317149367497963
+3-methylbutan-2-ol;water;CC(C)C(C)O;O;1.3696425119653843
+quinolin-5-ol;water;Oc1cccc2ncccc12 ;O;0.24342595793707164
+2-nitroaniline;water;Nc1ccccc1N(=O)=O;O;0.520207992401657
+pyrrolidin-2-one;water;O=C1CCCN1;O;1.9661555172769907
+17-hydroxy-10,13-dimethyl-1,2,4,5,6,7,8,9,11,12,14,15,16,17-tetradecahydrocyclopenta[a]phenanthren-3-one;water;CC34CCC1C(CCC2CC(=O)CCC12C)C3CCC4O ;O;-0.8078685626241034
+1,2,4,5-tetramethylbenzene;water;Cc1cc(C)c(C)cc1C;O;-0.7348553707739626
+6-chloro-2-N,4-N-diethyl-1,3,5-triazine-2,4-diamine;water;CCNc1nc(Cl)nc(NCC)n1 ;O;-0.7157669546039912
+3,3-bis(4-hydroxyphenyl)-2-benzofuran-1-one;water;Oc1ccc(cc1)C2(OC(=O)c3ccccc23)c4ccc(O)cc4 ;O;0.0716302124073291
+2,2-dichloro-N-[1,3-dihydroxy-1-(4-methylsulfonylphenyl)propan-2-yl]acetamide;water;CS(=O)(=O)c1ccc(cc1)C(O)C(CO)NC(=O)C(Cl)Cl ;O;0.4276291739772957
+5-ethyl-5-prop-2-enyl-1,3-diazinane-2,4,6-trione;water;O=C1NC(=O)NC(=O)C1(CC)CC=C;O;0.6853227922719095
+2-methoxy-4-prop-2-enylphenol;water;COc1cc(CC=C)ccc1O;O;0.7110921541013709
+2,7-dimethylquinoline;water;c2c(C)cc1nc(C)ccc1c2 ;O;0.5297522004866427
+1-(2-fluorophenyl)-1-(4-fluorophenyl)-2-(1,2,4-triazol-1-yl)ethanol;water;OC(Cn1cncn1)(c2ccc(F)cc2)c3ccccc3F;O;-0.15265867758983495
+6-chloro-2-N,2-N-diethyl-4-N-propan-2-yl-1,3,5-triazine-2,4-diamine;water;CCN(CC)c1nc(Cl)nc(NC(C)C)n1;O;-0.35070099535328825
+1-ethylnaphthalene;water;CCc1cccc2ccccc12;O;-0.5344270009892629
+oct-1-ene;water;CCCCCCC=C;O;-0.66327381013657
+hex-1-ene;water;CCCCC=C;O;-0.085849220994935
+1-ethyl-4-methylbenzene;water;CCc1ccc(C)cc1;O;-0.028583972485020745
+5-chloro-2-ethyl-9-methyl-2,4,9,15-tetrazatricyclo[9.4.0.03,8]pentadeca-1(11),3(8),4,6,12,14-hexaen-10-one;water;CCN2c1nc(Cl)ccc1N(C)C(=O)c3cccnc23 ;O;-0.5077032183513029
+3-hydroxy-13-methyl-12,14,15,16-tetrahydro-11H-cyclopenta[a]phenanthren-17-one;water;CC34CCc1c(ccc2cc(O)ccc12)C3CCC4=O;O;-1.045042133535998
+pyrene;water;c1cc2ccc3cccc4ccc(c1)c2c34;O;-1.4917110719133289
+(4-chlorophenyl)sulfanylmethylsulfanyl-diethoxy-sulfanylidene-lambda5-phosphane;water;CCOP(=S)(OCC)SCSc1ccc(Cl)cc1;O;-1.281738494043644
+3-hydroxy-10,13-dimethyl-1,2,3,4,5,6,7,8,9,11,12,14,15,16-tetradecahydrocyclopenta[a]phenanthren-17-one;water;CC12CCC(O)CC1CCC3C2CCC4(C)C3CCC4=O;O;-0.6451398147750972
+anthracene-9,10-dione;water;O=C1c2ccccc2C(=O)c3ccccc13;O;-1.0211816133235339
+N'-benzyl-5-methyl-1,2-oxazole-3-carbohydrazide;water;Cc1cc(no1)C(=O)NNCc2ccccc2;O;0.28112557987276526
+2-methylheptan-2-ol;water;CCCCCC(C)(C)O;O;0.6347384894214854
+5-ethyl-5-(3-methylbut-2-enyl)-1,3-diazinane-2,4,6-trione;water;O=C1NC(=O)NC(=O)C1(CC)CC=C(C)C;O;0.38038534395661644
+cycloheptane;water;C1CCCCCC1;O;-0.2194681341847347
+2,4-diazaspiro[5.6]dodecane-1,3,5-trione;water;O=C2NC(=O)C1(CCCCCC1)C(=O)N2 ;O;-0.056262175931479405
+N-benzyl-2-(2-nitroimidazol-1-yl)acetamide;water;O=C(Cn1ccnc1N(=O)=O)NCc2ccccc2;O;0.11457914878976468
+prop-1-ene;water;CC=C;O;0.9401531481410278
+(5-methyl-2-phenylpyrazol-3-yl) N,N-dimethylcarbamate;water;CN(C)C(=O)Oc1cc(C)nn1c2ccccc2;O;0.45817063984925
+anthracen-9-ol;water;c3ccc2c(O)c1ccccc1cc2c3 ;O;-0.8016648273688628
+2,2-dimethylpropan-1-ol;water;CC(C)(C)CO;O;1.2646562230305416
+2,4-dimethylpentane;water;CC(C)CC(C)C;O;-0.5773759373716985
+2,3-dichlorophenol;water;Oc1cccc(Cl)c1Cl;O;0.835166859206185
+pent-1-yne;water;CCCC#C;O;0.6729153217614282
+(5,5-dimethyl-3-oxocyclohexen-1-yl) N,N-dimethylcarbamate;water;CN(C)C(=O)OC1=CC(=O)CC(C)(C)C1 ;O;1.0499115411183633
+11-ethyl-6-methylpyrido[3,2-c][1,5]benzodiazepin-5-one;water;CCN2c1ccccc1N(C)C(=O)c3cccnc23 ;O;-0.13070699899436772
+trichloro(nitro)methane;water;ClC(Cl)(Cl)N(=O)=O;O;0.5011195762316856
+1-bromo-2-methylbenzene;water;Cc1ccccc1Br;O;0.39136118325435004
+oxane;water;C1CCOCC1;O;1.4412240726027772
+propan-2-yl N-(3-chlorophenyl)carbamate;water;CC(C)OC(=O)Nc1cccc(Cl)c1;O;-0.1574307816323277
+2-hydroxy-1,2-diphenylethanone;water;OC(C(=O)c1ccccc1)c2ccccc2;O;0.09549073261979327
+diphenylmethanone;water;O=C(c1ccccc1)c2ccccc2;O;-0.033356076527513705
+4-methylpentan-2-one;water;CC(C)CC(=O)C;O;1.1024046855857845
+cyclohexene;water;C1CCC=CC1;O;0.2195654377246075
+2-(2,4-difluorophenyl)-1,3-bis(1,2,4-triazol-1-yl)propan-2-ol;water;OC(Cn1cncn1)(Cn2cncn2)c3ccc(F)cc3F ;O;0.5965616570815425
+7-chloro-3',4,6-trimethoxy-5'-methylspiro[1-benzofuran-2,4'-cyclohex-2-ene]-1',3-dione;water;COC1=CC(=O)CC(C)C13Oc2c(Cl)c(OC)cc(OC)c2C3=O;O;-0.09348458746292378
+8-chloro-6-(2-chlorophenyl)-1-methyl-4H-[1,2,4]triazolo[4,3-a][1,4]benzodiazepine;water;Cc3nnc4CN=C(c1ccccc1Cl)c2cc(Cl)ccc2n34;O;-0.4962501686493201
+naphthalen-1-ol;water;Oc1cccc2ccccc12;O;0.3961332872968428
+4-nitroaniline;water;Nc1ccc(cc1)N(=O)=O;O;0.3245517266594501
+(10,13-dimethyl-3-oxo-1,2,6,7,8,9,11,12,14,15,16,17-dodecahydrocyclopenta[a]phenanthren-17-yl) acetate;water;CC(=O)OC3CCC4C2CCC1=CC(=O)CCC1(C)C2CCC34C ;O;-1.018318350898038
+5-propan-2-yl-5-prop-2-enyl-1,3-diazinane-2,4,6-trione;water;O=C1NC(=O)NC(=O)C1(C(C)C)CC=C;O;0.6404650142724767
+2,3-diacetyloxypropyl acetate;water;CC(=O)OCC(COC(=O)C)OC(=O)C;O;1.1692141421806845
+ethyl propanoate;water;CCOC(=O)CC;O;1.1405815179257275
+3-nitrophenol;water;Oc1cccc(c1)N(=O)=O;O;0.9735578764384779
+ethyl octanoate;water;CCCCCCCC(=O)OCC;O;-0.16220288567482066
+8-(hydroxy-phenyl-pyridin-2-ylmethyl)-10-[phenyl(pyridin-2-yl)methylidene]-4-azatricyclo[5.2.1.02,6]dec-8-ene-3,5-dione;water;OC(C1=CC2C5C(C1C2=C(c3ccccc3)c4ccccn4)C(=O)NC5=O)(c6ccccc6)c7ccccn7 ;O;-0.4203737143736838
+1,2,3,5-tetrachloro-4-(2,3,4-trichlorophenyl)benzene;water;Clc1ccc(c(Cl)c1Cl)c2c(Cl)cc(Cl)c(Cl)c2Cl ;O;-2.199891311819268
+2-chloro-N-(2,6-diethylphenyl)-N-(methoxymethyl)acetamide;water;CCc1cccc(CC)c1N(COC)C(=O)CCl ;O;-0.10016553312241346
+2-chloro-6-(trichloromethyl)pyridine;water;Clc1cccc(n1)C(Cl)(Cl)Cl;O;-0.338770735247056

@@ -3,17 +3,17 @@ from pubchempy import get_compounds
 import random
 import os
 import time
+import sys
 
-dataset_name = 'MNSOL'
-raw_data_name = 'MNSol_alldata.txt'
+dataset_name = sys.argv[1]
+raw_data_name = sys.argv[2]
 # dataset_name = 'freesolv'
 # raw_data_name = 'freesolv.csv'
 
-dataset_path = '/users10/xzluo/DrugDP/DrugPP/data/' + dataset_name + '/'
+dataset_path = './data/' + dataset_name + '/'
 raw_path = dataset_path + raw_data_name  # 原始数据
 output_path = dataset_path + dataset_name + '_reformated.txt'  # 原始数据转化后的总数据
-train_path = dataset_path + 'train.csv'  # 训练集
-val_path = dataset_path + 'val.csv'  # 验证集
+
 res_path = dataset_path + 'res.txt'  # 需要手动添加的内容
 half_dict_path = dataset_path + 'half_dict.csv'
 full_dict_path = dataset_path + 'full_dict.csv'
@@ -75,7 +75,7 @@ class DataGenerator:
                     if charge != '0' or tp == 'rel':
                         continue
                     ret.append([solute_name, solvent_name, energy])
-        if name == "freesolv":
+        if name in ["freesolv", "esol"]:
             with open(path, 'r') as reader:
                 for line in reader:
                     if first_column:
@@ -83,8 +83,7 @@ class DataGenerator:
                         continue
                     items = line.split(',')
                     # prevent data like '"xxx"'(have "" at start)
-                    ret.append(
-                        [clear_string(items[0]), items[1].replace('\n', '')])
+                    ret.append([clear_string(items[0]), items[1].replace('\n', '')])
         return ret
 
     #  从pubchempy中获取smile
@@ -117,10 +116,7 @@ class DataGenerator:
 
     def reformat_data(self, raw_data, output_file, name):
         with open(output_file, 'w') as writer:
-            writer.write(';'.join([
-                'Solute', 'Solvent', 'SoluteSMILES', 'SolventSMILES',
-                'DeltaGsolv'
-            ]) + '\n')
+            writer.write(';'.join(['Solute', 'Solvent', 'SoluteSMILES', 'SolventSMILES', 'DeltaGsolv']) + '\n')
             if name == "MNSOL":
                 for items in raw_data:
                     try:
@@ -128,13 +124,10 @@ class DataGenerator:
                         solute_smile = self.get_smile(solute_name)
                         solvent_smile = self.get_smile(solvent_name)
                         if solvent_smile and solute_smile:
-                            writer.write(';'.join([
-                                solute_name, solvent_name, solute_smile,
-                                solvent_smile, energy
-                            ]) + '\n')
+                            writer.write(';'.join([solute_name, solvent_name, solute_smile, solvent_smile, energy]) + '\n')
                     except Exception as e:
                         print("!!!!!!!!!!!Error: ", e, items)
-            if name == "freesolv":
+            if name in ["freesolv", "esol"]:
                 cnt = 1
                 solvent_name = "water"
                 solvent_smile = "O"
@@ -143,14 +136,11 @@ class DataGenerator:
                         solute_smile, energy = items
                         solute_name = self.get_name(solute_smile)
                         if solute_name:
-                            writer.write(';'.join([
-                                solute_name, solvent_name, solute_smile,
-                                solvent_smile, energy
-                            ]) + '\n')
-                            print("{} is written!".format(cnt))
+                            writer.write(';'.join([solute_name, solvent_name, solute_smile, solvent_smile, energy]) + '\n')
+                            # print("{} is written!".format(cnt))
                             cnt = cnt + 1
                         else:
-                            print(solute_smile + "written failed!")
+                            print(items + "written failed!")
                     except Exception as e:
                         print("!!!!!!!!!!!Error: ", e, items)
 
@@ -164,11 +154,14 @@ def split_data(path):  # 划分训练集与验证集
     train_num = int(len(all_data) * train_rate) + 1  # 向上取整
     title = all_data[0]  # 列名
     all_data = all_data[1:]
-    random.shuffle(all_data)
-    with open(train_path, 'w') as writer:
-        writer.writelines([title] + all_data[:train_num])
-    with open(val_path, 'w') as writer:
-        writer.writelines([title] + all_data[train_num:])
+    for i in range(5):
+        train_path = dataset_path + 'train' + str(i) + '.csv'  # 训练集
+        val_path = dataset_path + 'val' + str(i) + '.csv'  # 验证集
+        random.shuffle(all_data)
+        with open(train_path, 'w') as writer:
+            writer.writelines([title] + all_data[:train_num])
+        with open(val_path, 'w') as writer:
+            writer.writelines([title] + all_data[train_num:])
 
 
 def gen_data():
@@ -182,9 +175,7 @@ def gen_data():
         print('Save Res')
         print("can't find " + str(len(generator.cant_find)))
         with open(res_path, 'a') as writer:
-            writer.write('\n' +
-                         time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) +
-                         '\n')
+            writer.write('\n' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n')
             for name in generator.cant_find:
                 writer.write(name + '\n')
     # print(len(generator.all_smiles))
@@ -195,6 +186,7 @@ def gen_data():
 
 
 def main():
+    print(raw_path)
     if os.path.isfile(raw_path):
         print("Get Raw Data!")
         # gen_data()

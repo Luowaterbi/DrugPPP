@@ -69,11 +69,13 @@ def make_model(opt):
         interactor = None
 
     # make MoE
+    print("MoE=", opt.moe)
     if opt.moe:
-        Solv_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
-        Solu_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
+        print("built moe")
+        Solv_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
+        Solu_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         if opt.mix:
-            Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 4, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef)
+            Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         else:
             Mix_MoE = None
     else:
@@ -106,6 +108,7 @@ def make_model(opt):
     # print(model)
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
+    # print(model)
     init_model(opt, model)
     return model
 
@@ -514,7 +517,7 @@ def masked_sum(features, mask, dim):
 
 class ReadoutLayer(nn.Module):
     """ readout pair-wise features """
-    def __init__(self, d_input, mix_moe, readout='avg'):
+    def __init__(self, d_input, mix_moe=False, readout='avg'):
         super(ReadoutLayer, self).__init__()
         self.readout = readout
         self.mix_moe = mix_moe
@@ -639,6 +642,16 @@ class ClassificationDecoder(nn.Module):
         return pred, moe_loss
 
 
+def moe_input_process(moe_input, features, mask):
+    if moe_input == "mol_avg":
+        features = masked_mean(features, mask, dim=1).unsqueeze(1)
+        mask = torch.ones(mask.shape[0], 1).to(mask.device)
+    elif moe_input == "mol_sum":
+        features = masked_sum(features, mask, dim=1).unsqueeze(1)
+        mask = torch.ones(mask.shape[0], 1).to(mask.device)
+    return features, mask
+
+
 # ====== full models ======
 class SAIGNModel(nn.Module):
     """
@@ -668,23 +681,20 @@ class SAIGNModel(nn.Module):
         """
         moe_loss = 0
         x1_features, x2_features, mask1, mask2 = self.encoder(batch)
-        if self.Solv_MoE:
-            x1_moe_features, x1_moe_loss = self.Solv_MoE(x1_features, mask1, train=self.training)
-            moe_loss += x1_moe_loss
-        else:
-            x1_moe_features = x1_features
-
-        if self.Solu_MoE:
-            x2_moe_features, x2_moe_loss = self.Solu_MoE(x2_features, mask2, train=self.training)
-            moe_loss += x2_moe_loss
-        else:
-            x2_moe_features = x2_features
+        if self.opt.moe:
+            x1_moe_features, mask1 = moe_input_process(self.opt.moe_input, x1_features, mask1)
+            x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
+            x1_features, x1_moe_loss = self.Solv_MoE(x1_moe_features, mask1, train=self.training)
+            x2_features, x2_moe_loss = self.Solu_MoE(x2_moe_features, mask2, train=self.training)
+            moe_loss = x1_moe_loss + x2_moe_loss
 
         cat_mask = None
 
         if self.interactor:
             x1_features, x2_features, relation_features, cat_features, cat_mask = self.interactor(x1_features, x2_features, mask1, mask2)
             if self.Mix_MoE:
+                # mol_sum/mol_avg 并不会只用relation node，而是整个cat features的avg或者sum
+                cat_features, cat_mask = moe_input_process(self.opt.moe_input, cat_features, cat_mask)
                 relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, self.training)
                 moe_loss += rn_moe_loss
         else:

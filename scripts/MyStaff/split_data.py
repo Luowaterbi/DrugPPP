@@ -10,10 +10,10 @@ all_data = []
 with open(input_path, 'r') as reader:
     for line in reader:
         all_data.append(line)
-title = all_data[0]  # 列名
+title = all_data[0]
 all_data = all_data[1:]
 all_data_len = len(all_data)
-train_num = int(all_data_len * train_rate) + 1  # 向上取整
+train_num = int(all_data_len * train_rate) + 1
 val_num = all_data_len - train_num if train_rate + val_rate == 1.0 else int(all_data_len * val_rate) + 1
 for i in range(5):
     random.shuffle(all_data)
