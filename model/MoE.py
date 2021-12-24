@@ -52,9 +52,12 @@ class MoE(nn.Module):
         # 就是普通的MLP
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
         # 都初始化为0
-        self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
-
-        self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
+        if self.noisy_gating:
+            self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
+            self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
+        else:
+            self.w_gate = nn.Parameter(torch.randn(input_size, num_experts), requires_grad=True).to(self.device)
+            nn.init.xavier_uniform_(self.w_gate, gain=1.)
 
         # 激活函数，relu的平滑版本
         self.softplus = nn.Softplus()

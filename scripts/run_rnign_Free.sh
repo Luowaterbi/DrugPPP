@@ -180,6 +180,7 @@ for dataset in ${dataset_lst[@]}; do
                                                           --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
                                                           --train_file train_${data}.csv \
                                                           --valid_file val_${data}.csv \
+                                                          --test_file test_${data}.csv \
                                                           --batch_size ${train_batch_size} \
                                                           --max_epochs ${epoch} \
                                                           --lr ${lr} \

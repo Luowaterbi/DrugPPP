@@ -645,10 +645,10 @@ class ClassificationDecoder(nn.Module):
 def moe_input_process(moe_input, features, mask):
     if moe_input == "mol_avg":
         features = masked_mean(features, mask, dim=1).unsqueeze(1)
-        mask = torch.ones(mask.shape[0], 1).to(mask.device)
+        mask = (torch.ones(mask.shape[0], 1) > 0).to(mask.device)
     elif moe_input == "mol_sum":
         features = masked_sum(features, mask, dim=1).unsqueeze(1)
-        mask = torch.ones(mask.shape[0], 1).to(mask.device)
+        mask = (torch.ones(mask.shape[0], 1) > 0).to(mask.device)
     return features, mask
 
 
