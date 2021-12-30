@@ -5,7 +5,7 @@ echo eg: source run_bert_siamese.sh 3,4 stanford
 gpu_list=$1
 
 # Comment one of follow 2 to switch debugging status
-debug=--debug
+debug=
 # debug=
 
 # ======= dataset setting ======
@@ -96,9 +96,9 @@ att_block_lst=(none)
 
 # ------ MoE setting --------
 moe_lst=(1)
-mix=1
+mix=0
 # moe_input_lst=(atom)  
-moe_input_lst=(atom mol_avg mol_sum)
+moe_input_lst=(mol_sum)
 nosiy_gating=0
 num_experts_lst=(32)
 num_used_experts_lst=(4)
@@ -151,7 +151,7 @@ for dataset in ${dataset_lst[@]}; do
                                                     else
                                                       compare=--compare
                                                     fi
-                                                    model_name=rnign.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    model_name=rnign.without_mix.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
                                                     if [ ! -d ${runsdir} ]; then

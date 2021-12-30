@@ -9,7 +9,7 @@ debug=
 # debug=
 
 # ======= dataset setting ======
-dataset_lst=(esol freesolv)
+dataset_lst=(esol)
 
 # ====== train & test setting ======
 #seed_lst=(0)
@@ -95,8 +95,11 @@ inter_norm_type_lst=(layer_norm)
 att_block_lst=(none)
 
 # ------ MoE setting --------
-moe_lst=(0 1)
-mix=1
+moe_lst=(1)
+mix=0
+# moe_input_lst=(atom)  
+moe_input_lst=(mol_sum)
+noisy_gating=0
 num_experts_lst=(32)
 num_used_experts_lst=(4)
 moe_loss_coef_lst=(1e-1)
@@ -142,82 +145,86 @@ for dataset in ${dataset_lst[@]}; do
                                               for moe_loss_coef in ${moe_loss_coef_lst[@]}; do
                                                 # model names
                                                 for moe in ${moe_lst[@]}; do
-                                                  if [ $moe -eq 1 ]; then
-                                                    compare=
-                                                  else
-                                                    compare=--compare
-                                                  fi
-                                                  model_name=rnign.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.${debug}${compare}
-                                                  runsdir=./runs/${dataset}/${model_name}
-                                                  logdir=./log/${dataset}/${model_name}
-                                                  if [ ! -d ${runsdir} ]; then
-                                                    mkdir ${runsdir}
-                                                  fi 
-                                                  if [ ! -d ${logdir} ]; then
-                                                    mkdir ${logdir}
-                                                  fi 
+                                                  for moe_input in ${moe_input_lst[@]}; do
+                                                    if [ $moe -eq 1 ]; then
+                                                      compare=
+                                                    else
+                                                      compare=--compare
+                                                    fi
+                                                    model_name=rnign.without_mix.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    runsdir=./runs/${dataset}/${model_name}
+                                                    logdir=./log/${dataset}/${model_name}
+                                                    if [ ! -d ${runsdir} ]; then
+                                                      mkdir ${runsdir}
+                                                    fi 
+                                                    if [ ! -d ${logdir} ]; then
+                                                      mkdir ${logdir}
+                                                    fi 
 
-                                                  for data in ${data_lst[@]}; do
-                                                    for seed in ${seed_lst[@]}; do
+                                                    for data in ${data_lst[@]}; do
+                                                      for seed in ${seed_lst[@]}; do
 
-                                                      file_mark=${dataset}_${data}.sd_${seed}
-                                                      modeldir=./runs/${dataset}/${model_name}/${file_mark}.model
-                                                      if [ ! -d ${modeldir} ];then
-                                                        mkdir ${modeldir}
-                                                      fi
-                                                      echo [CLI]
-                                                      echo Model: ${model_name}
-                                                      echo Task: ${file_mark}
-                                                      echo [CLI]
-                                                      export OMP_NUM_THREADS=3 # threads num for each task
-                                                      CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} \
-                                                        --name ${model_name}_${file_mark} \
-                                                        --data_dir ./data/${dataset} \
-                                                        --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
-                                                        --train_file train_${data}.csv \
-                                                        --valid_file val_${data}.csv \
-                                                        --batch_size ${train_batch_size} \
-                                                        --max_epochs ${epoch} \
-                                                        --lr ${lr} \
-                                                        --rn_dst ${rn_dst} \
-                                                        --cross_dst ${cross_dst} \
-                                                        --d_model ${d_model} \
-                                                        --init_type ${init} \
-                                                        --encoder ${encoder} \
-                                                        --enc_n_layer ${enc_layer} \
-                                                        --enc_n_head ${enc_head} \
-                                                        --enc_dropout ${enc_dropout} \
-                                                        --enc_pair_type ${enc_pair_type} \
-                                                        --lambda_attention ${lambda_att} \
-                                                        --lambda_distance ${lambda_dst} \
-                                                        --interactor ${interactor} \
-                                                        --inter_n_layer ${inter_layer} \
-                                                        --inter_n_head ${inter_head} \
-                                                        --inter_dropout ${inter_dropout} \
-                                                        --inter_norm ${inter_norm} \
-                                                        --inter_res ${inter_res} \
-                                                        --type_emb ${type_emb} \
-                                                        --att_block ${att_block} \
-                                                        --moe ${moe} \
-                                                        --mix ${mix} \
-                                                        --num_experts ${num_experts} \
-                                                        --num_used_experts ${num_used_experts} \
-                                                        --moe_loss_coef ${moe_loss_coef} \
-                                                        --moe_dropout ${moe_dropout} \
-                                                        --readout ${readout} \
-                                                        --optimizer ${optimizer} \
-                                                        --weight_decay ${weight_decay} \
-                                                        --scheduler ${scheduler} \
-                                                        --patience ${patience} \
-                                                        --warmup_proportion ${warmup_proportion} \
-                                                        --seed ${seed} >./log/${dataset}/${model_name}/${file_mark}.log
-                                                      echo [CLI]
-                                                      echo Model: ${model_name}
-                                                      echo Task: ${file_mark}
-                                                      echo [CLI]
+                                                        file_mark=${dataset}_${data}.sd_${seed}
+                                                        modeldir=./runs/${dataset}/${model_name}/${file_mark}.model
+                                                        if [ ! -d ${modeldir} ];then
+                                                          mkdir ${modeldir}
+                                                        fi
+                                                        echo [CLI]
+                                                        echo Model: ${model_name}
+                                                        echo Task: ${file_mark}
+                                                        echo [CLI]
+                                                        export OMP_NUM_THREADS=3 # threads num for each task
+                                                        CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} \
+                                                          --name ${model_name}_${file_mark} \
+                                                          --data_dir ./data/${dataset} \
+                                                          --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
+                                                          --train_file train_${data}.csv \
+                                                          --valid_file val_${data}.csv \
+                                                          --batch_size ${train_batch_size} \
+                                                          --max_epochs ${epoch} \
+                                                          --lr ${lr} \
+                                                          --rn_dst ${rn_dst} \
+                                                          --cross_dst ${cross_dst} \
+                                                          --d_model ${d_model} \
+                                                          --init_type ${init} \
+                                                          --encoder ${encoder} \
+                                                          --enc_n_layer ${enc_layer} \
+                                                          --enc_n_head ${enc_head} \
+                                                          --enc_dropout ${enc_dropout} \
+                                                          --enc_pair_type ${enc_pair_type} \
+                                                          --lambda_attention ${lambda_att} \
+                                                          --lambda_distance ${lambda_dst} \
+                                                          --interactor ${interactor} \
+                                                          --inter_n_layer ${inter_layer} \
+                                                          --inter_n_head ${inter_head} \
+                                                          --inter_dropout ${inter_dropout} \
+                                                          --inter_norm ${inter_norm} \
+                                                          --inter_res ${inter_res} \
+                                                          --type_emb ${type_emb} \
+                                                          --att_block ${att_block} \
+                                                          --moe ${moe} \
+                                                          --mix ${mix} \
+                                                          --moe_input ${moe_input} \
+                                                          --noisy_gating ${noisy_gating} \
+                                                          --num_experts ${num_experts} \
+                                                          --num_used_experts ${num_used_experts} \
+                                                          --moe_loss_coef ${moe_loss_coef} \
+                                                          --moe_dropout ${moe_dropout} \
+                                                          --readout ${readout} \
+                                                          --optimizer ${optimizer} \
+                                                          --weight_decay ${weight_decay} \
+                                                          --scheduler ${scheduler} \
+                                                          --patience ${patience} \
+                                                          --warmup_proportion ${warmup_proportion} \
+                                                          --seed ${seed} >./log/${dataset}/${model_name}/${file_mark}.log
+                                                        echo [CLI]
+                                                        echo Model: ${model_name}
+                                                        echo Task: ${file_mark}
+                                                        echo [CLI]
+                                                      done
                                                     done
+                                                    python scripts/MyStaff/cal_avg.py ./runs/${dataset}/${model_name}/best.txt
                                                   done
-                                                  python scripts/MyStaff/cal_avg.py ./runs/${dataset}/${model_name}/best.txt
                                                 done
                                               done
                                             done

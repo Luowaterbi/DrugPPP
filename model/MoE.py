@@ -40,7 +40,7 @@ class MoE(nn.Module):
     def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=False, k=4, loss_coef=1e-2, dropout=0.1):
         super(MoE, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print("noisy_gating=", noisy_gating)
+        # print("noisy_gating=", noisy_gating)
         self.noisy_gating = noisy_gating
         self.num_experts = num_experts
         self.output_size = output_size
@@ -219,7 +219,7 @@ class MoE(nn.Module):
         experts_from = list(experts_from[..., index_sorted_experts])  # [tensor(num_used_experts), tensor(num_used_experts)]
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
-        print("experts_count=", [i.tolist() for i in experts_count])
+        print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
         experts_input = x[experts_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
@@ -229,5 +229,4 @@ class MoE(nn.Module):
         zeros[experts_from] += experts_output.cpu()
         zeros = zeros.to(self.device)
         zeros = self.dropout(self.sigmod(zeros)) + x
-        print("loss=", loss)
         return zeros, loss

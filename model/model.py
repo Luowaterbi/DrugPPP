@@ -69,12 +69,13 @@ def make_model(opt):
         interactor = None
 
     # make MoE
-    print("MoE=", opt.moe)
+    # print("MoE=", opt.moe)
     if opt.moe:
         print("built moe")
         Solv_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         Solu_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         if opt.mix:
+            print("built mix moe")
             Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         else:
             Mix_MoE = None
