@@ -65,6 +65,8 @@ def make_model(opt):
                                     res_interact=opt.inter_res)
     elif opt.interactor == 'rn':
         interactor = RNInteractor(opt)
+    elif opt.interactor == 'simple':
+        interactor = SimpleInteractor(opt.inter_res)
     else:
         interactor = None
 
@@ -72,16 +74,16 @@ def make_model(opt):
     # print("MoE=", opt.moe)
     if opt.moe:
         print("built moe")
-        Solv_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
-        Solu_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
+        Solu_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
+        Solv_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         if opt.mix:
             print("built mix moe")
             Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
         else:
             Mix_MoE = None
     else:
-        Solv_MoE = None
-        Solu_MOE = None
+        Solu_MoE = None
+        Solv_MOE = None
         Mix_MoE = None
 
     # make readout
@@ -105,7 +107,7 @@ def make_model(opt):
     else:
         raise NotImplementedError('Wrong decoder type: {}'.format(opt.decoder))
 
-    model = SAIGNModel(opt, encoder, interactor, Solv_MoE, Solu_MOE, Mix_MoE, decoder)
+    model = SAIGNModel(opt, encoder, interactor, Solu_MoE, Solv_MOE, Mix_MoE, decoder)
     # print(model)
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
@@ -150,6 +152,7 @@ class GTEncoder(nn.Module):
     A single Graph Transformer Encoder (GT), for joint input.
     f: joint_x1_x2 -> x1_x2_feature
     """
+
     def __init__(self,
                  opt,
                  d_features,
@@ -198,6 +201,7 @@ class PGTEncoder(nn.Module):
     A Pair-wise Graph Transformer (PGT) encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
+
     def __init__(self,
                  opt,
                  d_features,
@@ -266,6 +270,7 @@ class MLPEncoder(nn.Module):
     A pair-wise encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
+
     def __init__(self, opt, d_features, d_model=128, dropout=0.1, pair_type='share'):
         super(MLPEncoder, self).__init__()
         self.opt = opt
@@ -298,6 +303,7 @@ class RNInteractor(nn.Module):
             f: joint_features -> (x1', x2', I),
         where x1', x2' are interacted features and I is relation features (relation_node_features).
         """
+
     def __init__(self, opt, *args, **kwargs):
         super(RNInteractor, self).__init__()
 
@@ -319,12 +325,17 @@ class RNInteractor(nn.Module):
         return x1, None, relation_features, x1, x1_mask
 
 
+# class CIGINInteractor(nn.Module):
+#     def __init__(self, ):
+
+
 class SAInteractor(nn.Module):
     """
     Interaction layer with transformer:
     f: (x1, x2) -> (x1', x2', I),
     where x1', x2' are interacted features and I is relation features.
     """
+
     def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
         super(SAInteractor, self).__init__()
 
@@ -402,6 +413,7 @@ class SAInteractor(nn.Module):
 
 class RNSAInteractor(SAInteractor):
     """ Self-attentive interactor with relation node """
+
     def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
         super(RNSAInteractor, self).__init__(opt, n_layer, d_model, n_head, d_mlp, dropout, norm_type, type_emb, att_block, res_interact)
         self.relation_emb = nn.Parameter(torch.randn(d_model, dtype=torch.float), requires_grad=True)
@@ -450,7 +462,33 @@ class RNSAInteractor(SAInteractor):
         return x1_prime, x2_prime, relation_features, interacted_feature, ~cat_mask
 
 
+class SimpleInteractor(nn.Module):
+
+    def __init__(self, res_interact):
+        super(SimpleInteractor, self).__init__()
+        self.res_interact = res_interact
+
+    def forward(self, x1, x2, x1_mask, x2_mask):
+        x1_prime = block_padding(x1, x1_mask)
+        x2_prime = block_padding(x2, x2_mask)
+        interaction_map = torch.einsum("bnd,bmd->bnm", x1_prime, x2_prime)
+        interaction_map = torch.tanh(interaction_map)
+        x1_prime = x1_prime + torch.einsum("bnm,bmd->bnd", interaction_map, x2_prime)
+        x2_prime = x2_prime + torch.einsum("bnm,bnd->bmd", interaction_map, x1_prime)
+        relation_feature = None
+        cat_feature = torch.cat([x1_prime, x2_prime], dim=1)
+        cat_mask = torch.cat([x1_mask, x2_mask], dim=1)
+        if self.res_interact == 'cat':
+            x1_prime = torch.cat((x1, x1_prime), dim=-1)
+            x2_prime = torch.cat((x2, x2_prime), dim=-1)
+        elif self.res_interact == 'no_inter':
+            x1_prime = x1
+            x2_prime = x2
+        return x1_prime, x2_prime, relation_feature, cat_feature, cat_mask
+
+
 class Set2Set(nn.Module):
+
     def __init__(self, input_dim, hidden_dim, act_fn=nn.ReLU, num_layers=1):
         '''
         Args:
@@ -518,6 +556,7 @@ def masked_sum(features, mask, dim):
 
 class ReadoutLayer(nn.Module):
     """ readout pair-wise features """
+
     def __init__(self, d_input, mix_moe=False, readout='avg'):
         super(ReadoutLayer, self).__init__()
         self.readout = readout
@@ -587,6 +626,7 @@ class ReadoutLayer(nn.Module):
 
 class RegressionDecoder(nn.Module):
     """ readout feature and make predictions """
+
     def __init__(self, d_input, readout):
         super(RegressionDecoder, self).__init__()
         self.readout = readout
@@ -618,6 +658,7 @@ class RegressionDecoder(nn.Module):
 
 class ClassificationDecoder(nn.Module):
     """ readout feature and make predictions """
+
     def __init__(self, d_input, readout, num_tags):
         super(ClassificationDecoder, self).__init__()
         self.readout = readout
@@ -658,7 +699,8 @@ class SAIGNModel(nn.Module):
     """
     Self Attentive Interaction Graph Network for pair-wise prediction: f: (x1, x2) -> y
     """
-    def __init__(self, opt, encoder, interactor, Solv_MoE, Solu_MoE, Mix_MoE, decoder):
+
+    def __init__(self, opt, encoder, interactor, Solu_MoE, Solv_MoE, Mix_MoE, decoder):
         super(SAIGNModel, self).__init__()
         self.opt = opt
         self.encoder = encoder
@@ -668,7 +710,7 @@ class SAIGNModel(nn.Module):
         self.Solu_MoE = Solu_MoE
         self.Mix_MoE = Mix_MoE
 
-    def forward(self, batch):
+    def forward(self, batch, _print=False):
         """
 
         Parameters
@@ -685,8 +727,12 @@ class SAIGNModel(nn.Module):
         if self.opt.moe:
             x1_moe_features, mask1 = moe_input_process(self.opt.moe_input, x1_features, mask1)
             x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
-            x1_features, x1_moe_loss = self.Solv_MoE(x1_moe_features, mask1, train=self.training)
-            x2_features, x2_moe_loss = self.Solu_MoE(x2_moe_features, mask2, train=self.training)
+            # if _print:
+            #     print('Solu_MoE:')
+            x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, train=self.training, _print=_print)
+            # if _print:
+            #     print('Solv_MoE:')
+            x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, train=self.training, _print=_print)
             moe_loss = x1_moe_loss + x2_moe_loss
 
         cat_mask = None
@@ -696,9 +742,11 @@ class SAIGNModel(nn.Module):
             if self.Mix_MoE:
                 # mol_sum/mol_avg 并不会只用relation node，而是整个cat features的avg或者sum
                 cat_features, cat_mask = moe_input_process(self.opt.moe_input, cat_features, cat_mask)
-                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, self.training)
+                # if _print:
+                #     print("Mix_MoE:")
+                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, train=self.training)
                 moe_loss += rn_moe_loss
         else:
             relation_features = None
 
-        return self.decoder(x1_moe_features, x2_moe_features, mask1, mask2, moe_loss, relation_features, cat_mask)
+        return self.decoder(x1_features, x2_features, mask1, mask2, moe_loss, relation_features, cat_mask)

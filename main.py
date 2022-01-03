@@ -73,7 +73,7 @@ parser.add_argument('--enc_scale_norm', required=False, default=False, action='s
 parser.add_argument("--no_dummy", default=False, action='store_true', help="remove dummy node in GT.")
 
 # ====== interactor setting ======
-parser.add_argument('--interactor', required=False, default='rnsa', choices=['sa', 'rn', 'rnsa', 'none'], help="sa: self-attentive, rn: relation node.")
+parser.add_argument('--interactor', required=False, default='rnsa', choices=['sa', 'rn', 'rnsa', 'none', 's1mple'], help="sa: self-attentive, rn: relation node, simple: GIGIN used")
 parser.add_argument('--inter_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--inter_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--inter_dropout', required=False, type=float, default=0.1, help="dropout rate")

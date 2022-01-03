@@ -12,21 +12,11 @@ debug=
 restore=
 
 # ======= dataset setting ======
-dataset_lst=$2
+dataset_lst=(freesolv)
 
 # ====== train & test setting ======
-if [ $dataset_lst = MNSOL ]; then
-  seed_lst=(0 2 4)
-  data_lst=(0 1 2)
-elif [ $dataset_lst = TUM+Free ]; then
-  seed_lst=(42 100)
-  data_lst=(0 2 3 4)
-elif [ $dataset_lst = esol ]; then
-  seed_lst=(42 100 1000)
-  data_lst=(0 1 2 3 4)
-else
-  echo NO THIS DATASET
-fi
+seed_lst=(0 1 2 3 4)
+data_lst=(0 1 2)
 # seed_lst=(6150 6151 6152)
 
 #lr_lst=(0.001 0.003 0.0005)
@@ -124,6 +114,7 @@ for dataset in ${dataset_lst[@]}; do
                           --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
                           --train_file train_${data}.csv \
                           --valid_file val_${data}.csv \
+                          --test_file test_${data}.csv \
                           --batch_size ${train_batch_size} \
                           --max_epochs ${epoch} \
                           --lr ${lr} \

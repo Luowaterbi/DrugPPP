@@ -40,10 +40,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--name', default='cigin', help="The name of the current project: default: CIGIN")
 parser.add_argument('--output_dir', default='./runs/', help="dir of trained models")
 parser.add_argument('--data_dir', default='../data/MNSOL/', help="dir of data")
-parser.add_argument('--train_file', default='train.csv', help="train file path")
-parser.add_argument('--valid_file', default='val.csv', help="valid file path")
-parser.add_argument('--test_file', default='', help="test file path")
-parser.add_argument('--interaction', help="type of interaction function to use: dot | scaled-dot | general | " "tanh-general | self_att | none ", default='dot')
+parser.add_argument('--train_file', default='train_0.csv', help="train file path")
+parser.add_argument('--valid_file', default='val_0.csv', help="valid file path")
+parser.add_argument('--test_file', required=False, default='', help="test file path")
+parser.add_argument('--interaction', help="type of interaction function to use: dot | scaled-dot | general | "
+                    "tanh-general | self_att | none ", default='dot')
 parser.add_argument('--seed', required=False, type=int, default=0, help="")
 
 parser.add_argument('--max_epochs', required=False, type=int, default=100, help="The max number of epochs for training")
@@ -121,6 +122,7 @@ def collate(samples):
 
 
 class Dataclass(Dataset):
+
     def __init__(self, raw_dataset):
         self.dataset = []
         for idx in range(len(raw_dataset)):
@@ -166,7 +168,7 @@ def main():
 
     train_dataset = Dataclass(train_df)
     valid_dataset = Dataclass(valid_df)
-    test_dataset = Dataclass(test_df) if test_df else None
+    test_dataset = Dataclass(test_df) if args.test_file else None
 
     # ========= Context ===========
     project_name = args.name
@@ -227,7 +229,7 @@ def main():
         scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_train_steps)
     else:
         raise ValueError("Wrong choice for scheduler")
-
+    print(args)
     train(max_epochs, model, optimizer, scheduler, train_loader, valid_loader, test_loader, project_name, output_dir)
 
 
