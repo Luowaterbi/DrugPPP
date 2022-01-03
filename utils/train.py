@@ -21,7 +21,7 @@ class Trainer:
             running_loss = []
             # tq_loader = tqdm(train_loader)
             # for batch in train_loader:
-            train_loader_len = len(train_loader)
+            # train_loader_len = len(train_loader)
             for i, batch in enumerate(train_loader):
                 optimizer.zero_grad()
                 inputs, label = batch[:-1], batch[-1]
