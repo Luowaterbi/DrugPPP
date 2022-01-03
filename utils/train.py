@@ -8,6 +8,7 @@ import json
 
 
 class Trainer:
+
     def __init__(self):
         pass
 
@@ -19,10 +20,13 @@ class Trainer:
             model.train()
             running_loss = []
             # tq_loader = tqdm(train_loader)
-            for batch in train_loader:
+            # for batch in train_loader:
+            train_loader_len = len(train_loader)
+            for i, batch in enumerate(train_loader):
                 optimizer.zero_grad()
                 inputs, label = batch[:-1], batch[-1]
                 pred, moe_loss = model(inputs)
+                # pred, moe_loss = model(inputs, i < 3 or train_loader_len - i <= 3)
                 # print('Debug pred {} {}, label {} {}'.format(pred.dtype, pred.shape, label.dtype, label.shape))
                 label = label.long() if type(loss_fn) == torch.nn.CrossEntropyLoss else label
                 loss = loss_fn(pred, label)

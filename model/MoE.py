@@ -10,9 +10,31 @@
 import torch
 import torch.nn as nn
 from torch.distributions.normal import Normal
+import torch.nn.functional as F
+
+
+def get_norm_and_cos(a, b):
+    if a.size(-1) != b.size(0):
+        raise ValueError("Can't calculate!")
+    a_norm = torch.norm(a, p=2, dim=-1, keepdim=True)  # [batch*mol*1]
+    b_norm = torch.norm(b, p=2, dim=0, keepdim=True)  # [1*experts]
+    ab = a @ b  # [batch*mol*experts]
+    ab_norm = a_norm @ b_norm  # [batch*mol*experts]
+    cos = ab / ab_norm  # [batch*mol*experts]
+    a_output = a_norm.squeeze(-1).squeeze(-1).tolist()
+    b_ouput = b_norm.squeeze(0).tolist()
+    cos_ouput = cos.squeeze(1).tolist()
+    logits_ouput = ab.squeeze(1).tolist()
+    p = lambda x: [round(i, 2) for i in x]
+    pp = lambda x: [p(i) for i in x]
+    print("input=", p(a_output))
+    print("gate=", p(b_ouput))
+    print("cos=", pp(cos_ouput))
+    print("logits=", pp(logits_ouput))
 
 
 class MLP(nn.Module):
+
     def __init__(self, input_size, hidden_size, output_size):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -37,6 +59,7 @@ class MoE(nn.Module):
     k: an integer - how many experts to use for each batch element
     loss_coef: a scalar - multiplier on load-balancing losses
     """
+
     def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=False, k=4, loss_coef=1e-2, dropout=0.1):
         super(MoE, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -136,7 +159,7 @@ class MoE(nn.Module):
 
     # 只有在train的时候才加噪声，类似于dropout
     # 计算所有experts的权值和概率
-    def noisy_top_k_gating(self, x, train, mask, noise_epsilon=1e-2):
+    def noisy_top_k_gating(self, x, train, mask, _print, noise_epsilon=1e-2):
         """Noisy top-k gating.
           See paper: https://arxiv.org/abs/1701.06538.
           Args:
@@ -148,6 +171,9 @@ class MoE(nn.Module):
             load: a Tensor with shape [num_experts]
         """
         # @ 就是矩阵相乘 ，logit就是权值
+        # 输出模长和余弦相似度
+        if _print:
+            get_norm_and_cos(x, self.w_gate)
         clean_logits = x @ self.w_gate
         if self.noisy_gating and train:
             raw_noise_stddev = x @ self.w_noise
@@ -188,7 +214,7 @@ class MoE(nn.Module):
             load = self._gates_to_load(gates)
         return self.clean(gates, mask), load
 
-    def forward(self, x, mask, train=True):
+    def forward(self, x, mask, train=True, _print=False):
         """Args:
         x: [batch_size, ****, input_size]
         train: a boolean scalar.
@@ -202,7 +228,7 @@ class MoE(nn.Module):
         """
         if len(x.size()) < 3:
             x = torch.unsqueeze(x, 1)
-        gates, load = self.noisy_top_k_gating(x, train, mask)
+        gates, load = self.noisy_top_k_gating(x, train, mask, _print)
         # calculate importance loss
         if self.noisy_gating:
             importance = gates.reshape(-1, self.num_experts).sum(-2)
@@ -219,7 +245,9 @@ class MoE(nn.Module):
         experts_from = list(experts_from[..., index_sorted_experts])  # [tensor(num_used_experts), tensor(num_used_experts)]
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
-        print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
+        if _print:
+            print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
+            print("\n")
         experts_input = x[experts_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]

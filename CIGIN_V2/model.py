@@ -129,6 +129,8 @@ class CIGINModel(nn.Module):
         solvent = data[1]
         solute_len = data[2]
         solvent_len = data[3]
+        # print("solute.shape=",solute.shape)
+        # print("sol")
         # node embeddings after interaction phase
         try:
             # if edge exists in a molecule

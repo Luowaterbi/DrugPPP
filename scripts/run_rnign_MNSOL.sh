@@ -9,12 +9,21 @@ gpu_list=$1
 debug=
 
 # ======= dataset setting ======
-dataset_lst=(MNSOL)
+dataset_lst=$2
 
 # ====== train & test setting ======
-#seed_lst=(0)
-seed_lst=(0 2 4)
-data_lst=(0 1 2)
+if [ $dataset_lst = MNSOL ]; then
+  seed_lst=(0 2 4)
+  data_lst=(0 1 2)
+elif [ $dataset_lst = TUM+Free ]; then
+  seed_lst=(42 100)
+  data_lst=(0 2 3 4)
+elif [ $dataset_lst = esol ]; then
+  seed_lst=(42 100 1000)
+  data_lst=(0 1 2 3 4)
+else
+  echo NO THIS DATASET
+fi
 
 # lr_lst=(0.0005)
 lr_lst=(0.001)
@@ -69,7 +78,8 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-interactor=rnsa
+# interactor=rnsa
+interactor=simple
 #interactor=rn
 #interactor=sa
 #interactor=none
@@ -96,7 +106,7 @@ att_block_lst=(none)
 
 # ------ MoE setting --------
 moe_lst=(1)
-mix=0
+mix=1
 # moe_input_lst=(atom)  
 moe_input_lst=(mol_avg)
 nosiy_gating=0
@@ -151,7 +161,7 @@ for dataset in ${dataset_lst[@]}; do
                                                     else
                                                       compare=--compare
                                                     fi
-                                                    model_name=rnign.without_mix.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    model_name=rnign.interactor_${interactor}.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
                                                     if [ ! -d ${runsdir} ]; then

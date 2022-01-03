@@ -69,7 +69,8 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-interactor=rnsa
+# interactor=rnsa
+interactor=simple
 #interactor=rn
 #interactor=sa
 #interactor=none
@@ -151,7 +152,7 @@ for dataset in ${dataset_lst[@]}; do
                                                     else
                                                       compare=--compare
                                                     fi
-                                                    model_name=rnign.without_mix.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    model_name=rnign.interactor_${interactor}.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
                                                     if [ ! -d ${runsdir} ]; then
