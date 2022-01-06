@@ -76,10 +76,10 @@ class MoE(nn.Module):
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
         # 都初始化为0
         if self.noisy_gating:
-            self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
-            self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True).to(self.device)
+            self.w_gate = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True)
+            self.w_noise = nn.Parameter(torch.zeros(input_size, num_experts), requires_grad=True)
         else:
-            self.w_gate = nn.Parameter(torch.randn(input_size, num_experts), requires_grad=True).to(self.device)
+            self.w_gate = nn.Parameter(torch.randn(input_size, num_experts), requires_grad=True)
             nn.init.xavier_uniform_(self.w_gate, gain=1.)
 
         # 激活函数，relu的平滑版本
@@ -172,8 +172,8 @@ class MoE(nn.Module):
         """
         # @ 就是矩阵相乘 ，logit就是权值
         # 输出模长和余弦相似度
-        if _print:
-            get_norm_and_cos(x, self.w_gate)
+        # if _print:
+        #     get_norm_and_cos(x, self.w_gate)
         clean_logits = x @ self.w_gate
         if self.noisy_gating and train:
             raw_noise_stddev = x @ self.w_noise
@@ -232,6 +232,7 @@ class MoE(nn.Module):
         # calculate importance loss
         if self.noisy_gating:
             importance = gates.reshape(-1, self.num_experts).sum(-2)
+            print("importance_loss=", self.cv_squared(importance))
             loss = self.cv_squared(load) + self.cv_squared(importance)
             loss *= self.loss_coef
         else:
@@ -239,22 +240,21 @@ class MoE(nn.Module):
 
         experts_index = torch.nonzero(gates, as_tuple=True)  # [num_used_experts, len(gates.shape)]
         experts_gate = gates[experts_index]  # [num_used_experts]
-        experts_used = experts_index[-1]  # [num_used_experts]
-        experts_from = torch.stack(experts_index[:-1])  # [len(gates.shape), num_used_experts]
+        experts_batch_from, experts_atom_from, experts_used = experts_index  # [num_used_experts]
         experts_used, index_sorted_experts = experts_used.sort(stable=True)  # [num of used experts]
-        experts_from = list(experts_from[..., index_sorted_experts])  # [tensor(num_used_experts), tensor(num_used_experts)]
+        experts_batch_from = experts_batch_from[index_sorted_experts]
+        experts_atom_from = experts_atom_from[index_sorted_experts]
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
         if _print:
             print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
             print("\n")
-        experts_input = x[experts_from]  # [nus, input_size]
+        experts_input = x[experts_batch_from, experts_atom_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
         experts_output = torch.cat(experts_output)  # [nus, output_size]
         experts_output *= experts_gate.unsqueeze(-1)  # [nus, output_size]
-        zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).cpu()  # [batch_size, ..., output_size]
-        zeros[experts_from] += experts_output.cpu()
-        zeros = zeros.to(self.device)
+        zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size, requires_grad=True).to(self.device)  # [batch_size, ..., output_size]
+        zeros[experts_batch_from, experts_atom_from] += experts_output
         zeros = self.dropout(self.sigmod(zeros)) + x
         return zeros, loss

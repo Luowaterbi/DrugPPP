@@ -15,6 +15,8 @@ dataset_lst=$2
 if [ $dataset_lst = MNSOL ]; then
   seed_lst=(0 2 4)
   data_lst=(0 1 2)
+  # seed_lst=(0)
+  # data_lst=(0)
 elif [ $dataset_lst = TUM+Free ]; then
   seed_lst=(42 100)
   data_lst=(0 2 3 4)
@@ -25,8 +27,8 @@ else
   echo NO THIS DATASET
 fi
 
-# lr_lst=(0.0005)
-lr_lst=(0.001)
+lr_lst=(0.0005)
+# lr_lst=(0.001)
 # lr_lst=(0.001 0.003 0.0005)
 
 train_batch_size_lst=(32)
@@ -78,8 +80,8 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-# interactor=rnsa
-interactor=simple
+interactor=$3
+# interactor=simple
 #interactor=rn
 #interactor=sa
 #interactor=none
@@ -108,11 +110,11 @@ att_block_lst=(none)
 moe_lst=(1)
 mix=1
 # moe_input_lst=(atom)  
-moe_input_lst=(mol_avg)
-nosiy_gating=0
+moe_input_lst=$4
+noisy_gating=1
 num_experts_lst=(32)
 num_used_experts_lst=(4)
-moe_loss_coef_lst=(1e-1)
+moe_loss_coef_lst=(1e-2)
 moe_dropout=1e-1
 
 
@@ -161,9 +163,13 @@ for dataset in ${dataset_lst[@]}; do
                                                     else
                                                       compare=--compare
                                                     fi
-                                                    model_name=rnign.interactor_${interactor}.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+
+                                                    model_name=rnign.0106.with_moe_loss.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    # model_name=rnign.overfit.right.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    # model_name=rnign.0106.test_new_moe_with_moe_loss
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
+                                                    
                                                     if [ ! -d ${runsdir} ]; then
                                                       mkdir ${runsdir}
                                                     fi 
@@ -215,7 +221,7 @@ for dataset in ${dataset_lst[@]}; do
                                                           --moe ${moe} \
                                                           --mix ${mix} \
                                                           --moe_input ${moe_input} \
-                                                          --noisy_gating ${nosiy_gating} \
+                                                          --noisy_gating ${noisy_gating} \
                                                           --num_experts ${num_experts} \
                                                           --num_used_experts ${num_used_experts} \
                                                           --moe_loss_coef ${moe_loss_coef} \

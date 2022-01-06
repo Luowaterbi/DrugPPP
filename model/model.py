@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from model.graph_transformer import GraphTransformer, make_graph_transformer, Embeddings
 from torch.autograd import Variable
 from torch.nn.init import _calculate_fan_in_and_fan_out, _no_grad_normal_, _no_grad_uniform_
-from model.MoE import MoE
+from model.New_MoE import MoE
 
 
 # ====== Model definition ======
@@ -722,31 +722,34 @@ class SAIGNModel(nn.Module):
         -------
         model prediction of current task.
         """
-        moe_loss = 0
         x1_features, x2_features, mask1, mask2 = self.encoder(batch)
-        if self.opt.moe:
-            x1_moe_features, mask1 = moe_input_process(self.opt.moe_input, x1_features, mask1)
-            x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
-            # if _print:
-            #     print('Solu_MoE:')
-            x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, train=self.training, _print=_print)
-            # if _print:
-            #     print('Solv_MoE:')
-            x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, train=self.training, _print=_print)
-            moe_loss = x1_moe_loss + x2_moe_loss
 
         cat_mask = None
-
         if self.interactor:
             x1_features, x2_features, relation_features, cat_features, cat_mask = self.interactor(x1_features, x2_features, mask1, mask2)
             if self.Mix_MoE:
                 # mol_sum/mol_avg 并不会只用relation node，而是整个cat features的avg或者sum
                 cat_features, cat_mask = moe_input_process(self.opt.moe_input, cat_features, cat_mask)
-                # if _print:
-                #     print("Mix_MoE:")
-                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, train=self.training)
-                moe_loss += rn_moe_loss
+                if _print:
+                    print("Mix_MoE:")
+                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, train=self.training, _print=_print)
+            else:
+                rn_moe_loss = 0
         else:
             relation_features = None
 
+        if self.opt.moe:
+            x1_moe_features, mask1 = moe_input_process(self.opt.moe_input, x1_features, mask1)
+            x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
+            if _print:
+                print('Solu_MoE:')
+            x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, train=self.training, _print=_print)
+            if _print:
+                print('Solv_MoE:')
+            x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, train=self.training, _print=_print)
+        else:
+            x1_moe_loss = 0
+            x2_moe_loss = 0
+
+        moe_loss = x1_moe_loss + x2_moe_loss + rn_moe_loss
         return self.decoder(x1_features, x2_features, mask1, mask2, moe_loss, relation_features, cat_mask)

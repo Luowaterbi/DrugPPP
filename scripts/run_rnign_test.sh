@@ -69,8 +69,8 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-# interactor=rnsa
-interactor=simple
+interactor=rnsa
+# interactor=simple
 #interactor=rn
 #interactor=sa
 #interactor=none
@@ -99,7 +99,7 @@ att_block_lst=(none)
 moe_lst=(1)
 mix=1
 # moe_input_lst=(atom)  
-moe_input_lst=(mol_sum)
+moe_input_lst=(atom mol_sum mol_avg) 
 nosiy_gating=0
 num_experts_lst=(32)
 num_used_experts_lst=(4)
@@ -152,7 +152,7 @@ for dataset in ${dataset_lst[@]}; do
                                                     else
                                                       compare=--compare
                                                     fi
-                                                    model_name=rnign.interactor_${interactor}.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    model_name=rnign.right.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
                                                     if [ ! -d ${runsdir} ]; then

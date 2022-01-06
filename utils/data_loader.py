@@ -23,6 +23,7 @@ from torch.utils.data import Dataset
 
 MAX_ATTEMPTS = 500
 use_cuda = torch.cuda.is_available()
+# use_cuda = False
 FloatTensor = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 BoolTensor = torch.cuda.BoolTensor if use_cuda else torch.BoolTensor
 LongTensor = torch.cuda.LongTensor if use_cuda else torch.LongTensor
@@ -532,7 +533,7 @@ def joint_collate_func(batch):
         # ))
 
     # build tensor and send to device
-    emb, adj, dist,  labels = [FloatTensor(f) for f in (emb_lst, adj_lst, dist_lst, labels)]
+    emb, adj, dist, labels = [FloatTensor(f) for f in (emb_lst, adj_lst, dist_lst, labels)]
     mask = BoolTensor(mask)
     return emb, mask, adj, dist, labels
 

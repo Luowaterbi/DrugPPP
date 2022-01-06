@@ -73,7 +73,7 @@ parser.add_argument('--enc_scale_norm', required=False, default=False, action='s
 parser.add_argument("--no_dummy", default=False, action='store_true', help="remove dummy node in GT.")
 
 # ====== interactor setting ======
-parser.add_argument('--interactor', required=False, default='simple', choices=['sa', 'rn', 'rnsa', 'none', 's1mple'], help="sa: self-attentive, rn: relation node, simple: GIGIN used")
+parser.add_argument('--interactor', required=False, default='simple', choices=['sa', 'rn', 'rnsa', 'none', 'simple'], help="sa: self-attentive, rn: relation node, simple: GIGIN used")
 parser.add_argument('--inter_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--inter_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--inter_dropout', required=False, type=float, default=0.1, help="dropout rate")
@@ -85,7 +85,7 @@ parser.add_argument('--inter_res', required=False, default='no_inter', choices=[
 # ====== MoE setting ======
 parser.add_argument('--moe', required=False, default=1, type=int, help="whether use the MoE")
 parser.add_argument('--mix', required=False, default=1, type=int, help="whether use the mix gate")
-parser.add_argument('--moe_input', required=False, default='mol_avg', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
+parser.add_argument('--moe_input', required=False, default='atom', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
 parser.add_argument('--noisy_gating', required=False, default=0, type=int, help="whether open the noisy gating")
 parser.add_argument('--num_experts', required=False, type=int, default=32, help="the num of experts")
 parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
@@ -106,7 +106,7 @@ random.seed(opt.seed)
 np.random.seed(opt.seed)
 torch.manual_seed(opt.seed)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+# device = torch.device("cpu")
 debug = opt.debug
 
 # load_ft = True
@@ -131,9 +131,10 @@ def main():
         test_x1, test_x2, test_joint, test_y = load_raw_data(opt.task, test_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
 
     if debug:
-        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 100, 100, 50, 32, '[debug]' + opt.name
+        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 100, 100, 100, 32, '[debug]' + opt.name
         train_x1, train_x2, train_joint, train_y = [d[:train_num] for d in (train_x1, train_x2, train_joint, train_y)]
         valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (valid_x1, valid_x2, valid_joint, valid_y)]
+        # valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (train_x1, train_x2, train_joint, train_y)]
         if test_path:
             test_x1, test_x2, test_joint, test_y = [d[:valid_num] for d in (test_x1, test_x2, test_joint, test_y)]
 
@@ -149,6 +150,7 @@ def main():
     print(opt)
     model = make_model(opt)
     model.to(device)
+    # model.to(torch.device("cpu"))
 
     optimizer, scheduler = make_optimizer_scheduler(opt, model, int(len(train_x1) / opt.batch_size * opt.max_epochs))
     loss_fn = torch.nn.MSELoss() if opt.decoder == 'reg' else torch.nn.CrossEntropyLoss()

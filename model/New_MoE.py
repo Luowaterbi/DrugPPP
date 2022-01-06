@@ -70,13 +70,12 @@ class MoE(nn.Module):
         super(MoE, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # self.device = torch.device("cpu")
-        self.noisy_gating = noisy_gating
+        self.loss_coef = loss_coef
         self.num_experts = num_experts
         self.output_size = output_size
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.k = k
-        self.loss_coef = loss_coef
 
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
 
@@ -91,7 +90,7 @@ class MoE(nn.Module):
 
         assert (self.k <= self.num_experts)
 
-    def forward(self, x, mask, train=True, _print=False):
+    def forward(self, x, mask, train=True, _loss=True, _print=False):
         """Args:
         x: [batch_size, ****, input_size]
         train: a boolean scalar.
@@ -104,9 +103,9 @@ class MoE(nn.Module):
         encourages all experts to be approximately equally used across a batch.
         """
 
-        if _print:
-            # get_norm_and_cos(x, self.w_gate)
-            print_gate(self.w_gate)
+        # if _print:
+        # get_norm_and_cos(x, self.w_gate)
+        # print_gate(self.w_gate)
 
         logits = x @ self.w_gate
         top_k_logits, top_k_indices = logits.topk(min(self.k, self.num_experts), dim=-1)
@@ -116,6 +115,15 @@ class MoE(nn.Module):
 
         mask = mask.long().unsqueeze(-1).expand(mask.shape[0], mask.shape[1], gates.shape[-1])
         gates = torch.mul(gates, mask)
+
+        if _loss:
+            importance = gates.reshape(-1, self.num_experts).sum(0).float()
+            eps = 1e-10
+            moe_loss = importance.var() / (importance.mean()**2 + eps)
+        else:
+            moe_loss = 0
+
+        moe_loss = moe_loss * self.loss_coef
 
         experts_index = torch.nonzero(gates, as_tuple=True)  # [num_used_experts, len(gates.shape)]
         experts_gate = gates[experts_index]  # [num_used_experts]
@@ -129,15 +137,16 @@ class MoE(nn.Module):
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
         if _print:
             print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
+            print("moe_loss=", moe_loss)
             print("\n")
         experts_input = x[experts_batch_from, experts_atom_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
         experts_output = torch.cat(experts_output)  # [nus, output_size]
-        experts_output *= experts_gate.unsqueeze(-1)  # [nus, output_size]
+        experts_output = experts_output * experts_gate.unsqueeze(-1)  # [nus, output_size]
         # zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).cpu()  # [batch_size, ..., output_size]
         # zeros[experts_from] += experts_output.cpu()
         zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).to(self.device)  # [batch_size, ..., output_size]
         zeros[experts_batch_from, experts_atom_from] += experts_output
         zeros = self.dropout(self.sigmod(zeros)) + x
-        return zeros, 0
+        return zeros, moe_loss

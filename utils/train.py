@@ -5,6 +5,7 @@ from utils.test import Tester
 from transformers import AdamW, get_linear_schedule_with_warmup as get_lwp
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import json
+from utils.draw import plot_loss
 
 
 class Trainer:
@@ -16,21 +17,28 @@ class Trainer:
         if test_loader:
             test_best_score = {"RMSE": 10000, "MAE": 10000}
         val_best_score = {"RMSE": 10000, "MAE": 10000}
+        train_loss = []
         for epoch in tqdm(range(max_epochs)):
             model.train()
             running_loss = []
             # tq_loader = tqdm(train_loader)
             # for batch in train_loader:
-            # train_loader_len = len(train_loader)
+            train_loader_len = len(train_loader)
             for i, batch in enumerate(train_loader):
                 optimizer.zero_grad()
                 inputs, label = batch[:-1], batch[-1]
-                pred, moe_loss = model(inputs)
-                # pred, moe_loss = model(inputs, i < 3 or train_loader_len - i <= 3)
+                # pred, moe_loss = model(inputs)
+                pred, moe_loss = model(inputs, i < 3 or train_loader_len - i <= 3)
                 # print('Debug pred {} {}, label {} {}'.format(pred.dtype, pred.shape, label.dtype, label.shape))
                 label = label.long() if type(loss_fn) == torch.nn.CrossEntropyLoss else label
-                loss = loss_fn(pred, label)
+                model_loss = loss_fn(pred, label)
+                loss = model_loss + moe_loss
                 loss.backward()
+                if i < 3 or train_loader_len - i <= 3:
+                    print("solu moe grad=", model.Solu_MoE.w_gate.grad.sum(0).tolist())
+                    print("solv moe grad=", model.Solv_MoE.w_gate.grad.sum(0).tolist())
+                    print("mix moe grad=", model.Mix_MoE.w_gate.grad.sum(0).tolist())
+
                 optimizer.step()
                 running_loss.append(loss.cpu().detach())
                 if scheduler_type == 'lwp':
@@ -40,12 +48,13 @@ class Trainer:
                 #     tq_loader.set_description("Epoch:{} Loss:{:.4f}".format(epoch + 1, np.mean(np.array(running_loss))))
                 # else:
                 #     tq_loader.set_description("Epoch:{}".format(epoch + 1))
-
             model.eval()
             val_rmse_score, val_loss, val_mae_score, val_pred = tester.test(model, valid_loader)
             if scheduler_type == 'plateau':
                 scheduler.step(val_rmse_score)
-            print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f} lr:{:.6f}".format(epoch + 1, np.mean(np.array(running_loss)), val_loss, val_rmse_score, val_mae_score, optimizer.param_groups[0]['lr']))
+            cur_train_loss = np.mean(np.array(running_loss))
+            train_loss.append(cur_train_loss)
+            print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f} lr:{:.6f}".format(epoch + 1, cur_train_loss, val_loss, val_rmse_score, val_mae_score, optimizer.param_groups[0]['lr']))
             if better_score(val_rmse_score, val_best_score["RMSE"]):
                 val_best_score["RMSE"] = val_rmse_score
                 torch.save(model.state_dict(), output_dir + "best_model_RMSE.pt")
@@ -68,6 +77,9 @@ class Trainer:
                     test_best_score["MAE"] = test_mae_score
                     with open(output_dir + "test_pred_MAE.json", 'w') as writer:
                         json.dump(test_pred, writer)
+        with open(output_dir + "train_loss.json", 'w') as writer:
+            writer.write(str(train_loss))
+        plot_loss(train_loss, output_dir)
         with open(output_dir + "../best.txt", "a") as writer:
             writer.write("{};RMSE;{};{}\n".format(project_name, val_best_score["RMSE"], test_best_score["RMSE"] if test_loader else 0))
             writer.write("{};MAE;{};{}\n".format(project_name, val_best_score["MAE"], test_best_score["MAE"] if test_loader else 0))
