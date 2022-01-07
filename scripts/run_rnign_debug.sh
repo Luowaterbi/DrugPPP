@@ -5,18 +5,18 @@ echo eg: source run_bert_siamese.sh 3,4 stanford
 gpu_list=$1
 
 # Comment one of follow 2 to switch debugging status
-debug=--debug
-# debug=
+# debug=--debug
+debug=
 
 # ======= dataset setting ======
 dataset_lst=MNSOL
 
 # ====== train & test setting ======
 if [ $dataset_lst = MNSOL ]; then
-  seed_lst=(0 2 4)
-  data_lst=(0 1 2)
-  # seed_lst=(0)
-  # data_lst=(0)
+  # seed_lst=(0 2 4)
+  # data_lst=(0 1 2)
+  seed_lst=(0)
+  data_lst=(0)
 elif [ $dataset_lst = TUM+Free ]; then
   seed_lst=(42 100)
   data_lst=(0 2 3 4)
@@ -80,8 +80,8 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-# interactor=$3
-interactor=simple
+interactor=$2
+# interactor=simple
 #interactor=rn
 #interactor=sa
 #interactor=none
@@ -110,7 +110,7 @@ att_block_lst=(none)
 moe_lst=(1)
 mix=1
 # moe_input_lst=(atom)  
-moe_input_lst=$2
+moe_input_lst=$3
 noisy_gating=1
 num_experts_lst=(32)
 num_used_experts_lst=(4)
@@ -164,7 +164,7 @@ for dataset in ${dataset_lst[@]}; do
                                                       compare=--compare
                                                     fi
 
-                                                    model_name=rnign.0106.interactor_${interactor}.moe_input_${moe_input}.num_experts_${num_experts}.num_used_experts_${num_used_experts}.moe_loss_coef_${moe_loss_coef}.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
+                                                    model_name=rnign.0106.full_epoch_debug.interactor_${interactor}.moe_input_${moe_input}${debug}${compare}
                                                     # model_name=rnign.overfit.right.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     # model_name=rnign.0106.test_new_moe_with_moe_loss
                                                     runsdir=./runs/${dataset}/${model_name}

@@ -92,7 +92,7 @@ class MoE(nn.Module):
 
     def forward(self, x, mask, train=True, _loss=True, _print=False):
         """Args:
-        x: [batch_size, ****, input_size]
+        x: [batch_size, atom_num, input_size]
         train: a boolean scalar.
 
 
@@ -148,5 +148,5 @@ class MoE(nn.Module):
         # zeros[experts_from] += experts_output.cpu()
         zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).to(self.device)  # [batch_size, ..., output_size]
         zeros[experts_batch_from, experts_atom_from] += experts_output
-        zeros = self.dropout(self.sigmod(zeros)) + x
+        zeros = self.dropout(zeros) + x
         return zeros, moe_loss
