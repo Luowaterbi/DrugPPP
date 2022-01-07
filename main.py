@@ -12,6 +12,7 @@ import torch
 import random
 import json
 import numpy as np
+import wandb
 
 # local imports
 from utils.data_loader import FloatTensor, load_raw_data, construct_loader
@@ -60,7 +61,9 @@ parser.add_argument("--cross_dst", required=False, type=float, default=1e6, help
 
 # ====== encoder setting ======
 parser.add_argument('--encoder', required=False, default='gt', choices=['gt', 'mlp'], help="gt: graph transformer.")
-parser.add_argument('--enc_pair_type', required=False, default='sep', choices=['share', 'sep', 'joint'], help="share: share encoder for two input, " "sep: use different encoder for two input, " "joint: cat two input and send them to a single encoder")
+parser.add_argument('--enc_pair_type', required=False, default='sep', choices=['share', 'sep', 'joint'], help="share: share encoder for two input, "
+                    "sep: use different encoder for two input, "
+                    "joint: cat two input and send them to a single encoder")
 parser.add_argument('--enc_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--enc_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--enc_dropout', required=False, type=float, default=0.1, help="dropout rate")
@@ -100,7 +103,8 @@ parser.add_argument('--readout', required=False, default='rn_sum', choices=['avg
 parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
 
 opt = parser.parse_args()
-
+wandb.init(config=opt)
+config = wandb.config
 
 random.seed(opt.seed)
 np.random.seed(opt.seed)
@@ -161,12 +165,12 @@ def main():
         better_score_f = lambda x, y: x > y
         metric_f = acc_metrics
 
+    wandb.watch(model, log="all")
     trainer = Trainer()
     tester = Tester(metric_func=metric_f)
 
     # train & test
     trainer.train(opt.max_epochs, model, optimizer, scheduler, opt.name, opt.output_dir, tester, loss_fn, train_loader, valid_loader, test_loader, True, opt.scheduler, better_score_f)
-
 
 if __name__ == '__main__':
     main()

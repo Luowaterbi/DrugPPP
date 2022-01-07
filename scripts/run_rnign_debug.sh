@@ -164,7 +164,7 @@ for dataset in ${dataset_lst[@]}; do
                                                       compare=--compare
                                                     fi
 
-                                                    model_name=rnign.0106.full_epoch_debug.interactor_${interactor}.moe_input_${moe_input}${debug}${compare}
+                                                    model_name=rnign.0107.test_wandb.interactor_${interactor}.moe_input_${moe_input}${debug}${compare}
                                                     # model_name=rnign.overfit.right.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     # model_name=rnign.0106.test_new_moe_with_moe_loss
                                                     runsdir=./runs/${dataset}/${model_name}

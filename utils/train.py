@@ -6,6 +6,7 @@ from transformers import AdamW, get_linear_schedule_with_warmup as get_lwp
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import json
 from utils.draw import plot_loss
+import wandb
 
 
 class Trainer:
@@ -54,6 +55,8 @@ class Trainer:
                 scheduler.step(val_rmse_score)
             cur_train_loss = np.mean(np.array(running_loss))
             train_loss.append(cur_train_loss)
+            metrics = {"train_loss": cur_train_loss, "val_loss": val_loss, "val_rmse_loss": val_rmse_score, "val_mae_loss": val_mae_score, "lr": optimizer.param_groups[0]['lr']}
+            wandb.log(metrics)
             print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f} lr:{:.6f}".format(epoch + 1, cur_train_loss, val_loss, val_rmse_score, val_mae_score, optimizer.param_groups[0]['lr']))
             if better_score(val_rmse_score, val_best_score["RMSE"]):
                 val_best_score["RMSE"] = val_rmse_score
@@ -80,6 +83,7 @@ class Trainer:
         with open(output_dir + "train_loss.json", 'w') as writer:
             writer.write(str(train_loss))
         plot_loss(train_loss, output_dir)
+        wandb.save(output_dir + "model.h5")
         with open(output_dir + "../best.txt", "a") as writer:
             writer.write("{};RMSE;{};{}\n".format(project_name, val_best_score["RMSE"], test_best_score["RMSE"] if test_loader else 0))
             writer.write("{};MAE;{};{}\n".format(project_name, val_best_score["MAE"], test_best_score["MAE"] if test_loader else 0))
