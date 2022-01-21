@@ -107,6 +107,9 @@ class MoE(nn.Module):
         # get_norm_and_cos(x, self.w_gate)
         # print_gate(self.w_gate)
 
+        # if len(x.size()) < 3:
+        #     x = torch.unsqueeze(x, 1)
+
         logits = x @ self.w_gate
         top_k_logits, top_k_indices = logits.topk(min(self.k, self.num_experts), dim=-1)
         top_k_gates = self.softmax(top_k_logits)
@@ -135,10 +138,10 @@ class MoE(nn.Module):
         # experts_from = list(experts_from[..., index_sorted_experts])  # [tensor(num_used_experts), tensor(num_used_experts)]
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
-        if _print:
-            print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
-            print("moe_loss=", moe_loss)
-            print("\n")
+        # if _print:
+        #     print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
+        #     print("moe_loss=", moe_loss)
+        #     print("\n")
         experts_input = x[experts_batch_from, experts_atom_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
@@ -150,3 +153,4 @@ class MoE(nn.Module):
         zeros[experts_batch_from, experts_atom_from] += experts_output
         zeros = self.dropout(zeros) + x
         return zeros, moe_loss
+        # return x, 0

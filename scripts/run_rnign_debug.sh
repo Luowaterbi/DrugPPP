@@ -5,8 +5,8 @@ echo eg: source run_bert_siamese.sh 3,4 stanford
 gpu_list=$1
 
 # Comment one of follow 2 to switch debugging status
-# debug=--debug
-debug=
+debug=--debug
+# debug=
 
 # ======= dataset setting ======
 dataset_lst=MNSOL
@@ -107,11 +107,11 @@ inter_norm_type_lst=(layer_norm)
 att_block_lst=(none)
 
 # ------ MoE setting --------
-moe_lst=(1)
-mix=1
+moe=--moe
+mix=--mix
 # moe_input_lst=(atom)  
 moe_input_lst=$3
-noisy_gating=1
+noisy_gating=
 num_experts_lst=(32)
 num_used_experts_lst=(4)
 moe_loss_coef_lst=(1e-2)
@@ -155,16 +155,11 @@ for dataset in ${dataset_lst[@]}; do
                                           for num_experts in ${num_experts_lst[@]}; do
                                             for num_used_experts in ${num_used_experts_lst[@]}; do
                                               for moe_loss_coef in ${moe_loss_coef_lst[@]}; do
-                                                for moe in ${moe_lst[@]}; do
+                                                # for moe in ${moe_lst[@]}; do
                                                   for moe_input in ${moe_input_lst[@]}; do
 
-                                                    if [ $moe -eq 1 ]; then
-                                                      compare=
-                                                    else
-                                                      compare=--compare
-                                                    fi
-
-                                                    model_name=rnign.0107.test_wandb.interactor_${interactor}.moe_input_${moe_input}${debug}${compare}
+                                                    model_name=rnign_test_before_sweep
+                                                    # model_name=rnign.0108.relation_narrow_skip_moe
                                                     # model_name=rnign.overfit.right.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     # model_name=rnign.0106.test_new_moe_with_moe_loss
                                                     runsdir=./runs/${dataset}/${model_name}
@@ -190,7 +185,7 @@ for dataset in ${dataset_lst[@]}; do
                                                         echo Task: ${file_mark}
                                                         echo [CLI]
                                                         export OMP_NUM_THREADS=3 # threads num for each task
-                                                        CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} \
+                                                        CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} ${moe} ${mix} ${noisy_gating} \
                                                           --name ${model_name}_${file_mark} \
                                                           --data_dir ./data/${dataset} \
                                                           --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
@@ -218,10 +213,7 @@ for dataset in ${dataset_lst[@]}; do
                                                           --inter_res ${inter_res} \
                                                           --type_emb ${type_emb} \
                                                           --att_block ${att_block} \
-                                                          --moe ${moe} \
-                                                          --mix ${mix} \
                                                           --moe_input ${moe_input} \
-                                                          --noisy_gating ${noisy_gating} \
                                                           --num_experts ${num_experts} \
                                                           --num_used_experts ${num_used_experts} \
                                                           --moe_loss_coef ${moe_loss_coef} \
@@ -241,7 +233,7 @@ for dataset in ${dataset_lst[@]}; do
                                                     done
                                                     python scripts/MyStaff/cal_avg.py ./runs/${dataset}/${model_name}/best.txt
                                                   done
-                                                done
+                                                # done
                                               done
                                             done
                                           done

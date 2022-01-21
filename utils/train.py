@@ -24,21 +24,21 @@ class Trainer:
             running_loss = []
             # tq_loader = tqdm(train_loader)
             # for batch in train_loader:
-            train_loader_len = len(train_loader)
+            # train_loader_len = len(train_loader)
             for i, batch in enumerate(train_loader):
                 optimizer.zero_grad()
                 inputs, label = batch[:-1], batch[-1]
-                # pred, moe_loss = model(inputs)
-                pred, moe_loss = model(inputs, i < 3 or train_loader_len - i <= 3)
+                pred, moe_loss = model(inputs)
+                # pred, moe_loss = model(inputs, i < 3 or train_loader_len - i <= 3)
                 # print('Debug pred {} {}, label {} {}'.format(pred.dtype, pred.shape, label.dtype, label.shape))
                 label = label.long() if type(loss_fn) == torch.nn.CrossEntropyLoss else label
                 model_loss = loss_fn(pred, label)
                 loss = model_loss + moe_loss
                 loss.backward()
-                if i < 3 or train_loader_len - i <= 3:
-                    print("solu moe grad=", model.Solu_MoE.w_gate.grad.sum(0).tolist())
-                    print("solv moe grad=", model.Solv_MoE.w_gate.grad.sum(0).tolist())
-                    print("mix moe grad=", model.Mix_MoE.w_gate.grad.sum(0).tolist())
+                # if i < 3 or train_loader_len - i <= 3:
+                #     print("solu moe grad=", model.Solu_MoE.w_gate.grad.sum(0).tolist())
+                #     print("solv moe grad=", model.Solv_MoE.w_gate.grad.sum(0).tolist())
+                #     print("mix moe grad=", model.Mix_MoE.w_gate.grad.sum(0).tolist())
 
                 optimizer.step()
                 running_loss.append(loss.cpu().detach())
@@ -80,10 +80,10 @@ class Trainer:
                     test_best_score["MAE"] = test_mae_score
                     with open(output_dir + "test_pred_MAE.json", 'w') as writer:
                         json.dump(test_pred, writer)
+            wandb.log({"best_val_rmse_loss": val_best_score["RMSE"], "best_val_mae_loss": val_best_score["MAE"]})
         with open(output_dir + "train_loss.json", 'w') as writer:
             writer.write(str(train_loss))
         plot_loss(train_loss, output_dir)
-        wandb.save(output_dir + "model.h5")
         with open(output_dir + "../best.txt", "a") as writer:
             writer.write("{};RMSE;{};{}\n".format(project_name, val_best_score["RMSE"], test_best_score["RMSE"] if test_loader else 0))
             writer.write("{};MAE;{};{}\n".format(project_name, val_best_score["MAE"], test_best_score["MAE"] if test_loader else 0))

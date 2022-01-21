@@ -460,6 +460,7 @@ class RNSAInteractor(SAInteractor):
             x1_prime = x1
             x2_prime = x2
         return x1_prime, x2_prime, relation_features, interacted_feature, ~cat_mask
+        # return x1_prime, x2_prime, relation_features, relation_features, rel_mask
 
 
 class SimpleInteractor(nn.Module):
@@ -730,8 +731,8 @@ class SAIGNModel(nn.Module):
             if self.Mix_MoE:
                 # mol_sum/mol_avg 并不会只用relation node，而是整个cat features的avg或者sum
                 cat_features, cat_mask = moe_input_process(self.opt.moe_input, cat_features, cat_mask)
-                if _print:
-                    print("Mix_MoE:")
+                # if _print:
+                #     print("Mix_MoE:")
                 relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, train=self.training, _print=_print)
             else:
                 rn_moe_loss = 0
@@ -741,11 +742,11 @@ class SAIGNModel(nn.Module):
         if self.opt.moe:
             x1_moe_features, mask1 = moe_input_process(self.opt.moe_input, x1_features, mask1)
             x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
-            if _print:
-                print('Solu_MoE:')
+            # if _print:
+            #     print('Solu_MoE:')
             x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, train=self.training, _print=_print)
-            if _print:
-                print('Solv_MoE:')
+            # if _print:
+            #     print('Solv_MoE:')
             x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, train=self.training, _print=_print)
         else:
             x1_moe_loss = 0

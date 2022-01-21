@@ -1,0 +1,122 @@
+method: bayes
+metric:
+  goal: minimize
+  name: val_rmse_loss
+parameters:
+  att_block:
+    distribution: categorical
+    values:
+    - none
+  batch_size:
+    distribution: int_uniform
+    max: 64
+    min: 16
+  data_dir:
+    distribution: categorical
+    values:
+    - ./data/MNSOL
+  decoder:
+    distribution: categorical
+    values:
+    - reg
+  enc_dropout:
+    distribution: uniform
+    max: 0.2
+    min: 0.05
+  enc_pair_type:
+    distribution: categorical
+    values:
+    - sep
+  encoder:
+    distribution: categorical
+    values:
+    - gt
+  init_type:
+    distribution: categorical
+    values:
+    - uniform
+  inter_dropout:
+    distribution: uniform
+    max: 0.2
+    min: 0.05
+  inter_norm:
+    distribution: categorical
+    values:
+    - layer_norm
+  inter_res:
+    distribution: categorical
+    values:
+    - no_inter
+  interactor:
+    distribution: categorical
+    values:
+    - rnsa
+  lr:
+    distribution: uniform
+    max: 0.001
+    min: 0.00025
+  max_epochs:
+    distribution: int_uniform
+    max: 600
+    min: 150
+  moe_dropout:
+    distribution: uniform
+    max: 0.2
+    min: 0.05
+  moe_input:
+    distribution: categorical
+    values:
+    - atom
+  moe_loss_coef:
+    distribution: uniform
+    max: 0.02
+    min: 0.005
+  name:
+    distribution: categorical
+    values:
+    - rnign.0110.sweep
+  num_experts:
+    distribution: int_uniform
+    max: 64
+    min: 16
+  num_used_experts:
+    distribution: int_uniform
+    max: 8
+    min: 2
+  optimizer:
+    distribution: categorical
+    values:
+    - adam
+  output_dir:
+    distribution: categorical
+    values:
+    - ./runs/MNSOL/rnign.0110.sweep.model/
+  readout:
+    distribution: categorical
+    values:
+    - rn_sum
+  scheduler:
+    distribution: categorical
+    values:
+    - lwp
+  task:
+    distribution: categorical
+    values:
+    - sol
+  train_file:
+    distribution: categorical
+    values:
+    - train_0.csv
+  type_emb:
+    distribution: categorical
+    values:
+    - sep
+  valid_file:
+    distribution: categorical
+    values:
+    - val_0.csv
+  warmup_proportion:
+    distribution: uniform
+    max: 0.1
+    min: 0.025
+program: main.py

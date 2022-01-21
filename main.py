@@ -41,14 +41,14 @@ parser.add_argument('--y2id_file', default='', help="y2id dict path")
 
 # ====== training setting ======
 parser.add_argument('--seed', required=False, type=int, default=0, help="random seed")
-parser.add_argument('--max_epochs', required=False, type=int, default=100, help="The max number of epochs for training")
+parser.add_argument('--max_epochs', required=False, type=int, default=300, help="The max number of epochs for training")
 parser.add_argument('--batch_size', required=False, type=int, default=32, help="The batch size for training")
-parser.add_argument('--lr', required=False, type=float, default=0.005, help="")
+parser.add_argument('--lr', required=False, type=float, default=0.0005, help="")
 parser.add_argument('--optimizer', required=False, default='adam', choices=['adam', 'adamw'], help="")
 parser.add_argument('--weight_decay', required=False, type=float, default=0.1, help="")
 parser.add_argument('--scheduler', required=False, default='plateau', choices=['plateau', 'lwp'], help="lwp: linear warm up, plateau: reduce on plateau.")
 parser.add_argument('--warmup_proportion', required=False, type=float, default=0.05, help="rate for warm-up steps")
-parser.add_argument('--patience', required=False, type=int, default=5, help="The batch size for training")
+parser.add_argument('--patience', required=False, type=int, default=10, help="The batch size for training")
 parser.add_argument('--load_param', required=False, default='none', choices=['pretrain', 'full', 'none'], help="not implement yet.")
 
 # ====== model setting ======
@@ -76,7 +76,7 @@ parser.add_argument('--enc_scale_norm', required=False, default=False, action='s
 parser.add_argument("--no_dummy", default=False, action='store_true', help="remove dummy node in GT.")
 
 # ====== interactor setting ======
-parser.add_argument('--interactor', required=False, default='simple', choices=['sa', 'rn', 'rnsa', 'none', 'simple'], help="sa: self-attentive, rn: relation node, simple: GIGIN used")
+parser.add_argument('--interactor', required=False, default='rnsa', choices=['sa', 'rn', 'rnsa', 'none', 'simple'], help="sa: self-attentive, rn: relation node, simple: GIGIN used")
 parser.add_argument('--inter_n_layer', required=False, type=int, default=4, help="num of transformer layers")
 parser.add_argument('--inter_n_head', required=False, type=int, default=4, help="num of attention heads")
 parser.add_argument('--inter_dropout', required=False, type=float, default=0.1, help="dropout rate")
@@ -86,10 +86,10 @@ parser.add_argument('--att_block', required=False, default='none', choices=['non
 parser.add_argument('--inter_res', required=False, default='no_inter', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
 
 # ====== MoE setting ======
-parser.add_argument('--moe', required=False, default=1, type=int, help="whether use the MoE")
-parser.add_argument('--mix', required=False, default=1, type=int, help="whether use the mix gate")
+parser.add_argument('--moe', default=False, action="store_true", help="whether use the MoE")
+parser.add_argument('--mix', default=False, action="store_true", help="whether use the mix gate")
 parser.add_argument('--moe_input', required=False, default='atom', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
-parser.add_argument('--noisy_gating', required=False, default=0, type=int, help="whether open the noisy gating")
+parser.add_argument('--noisy_gating', default=False, action="store_true", help="whether open the noisy gating")
 parser.add_argument('--num_experts', required=False, type=int, default=32, help="the num of experts")
 parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
 parser.add_argument('--moe_loss_coef', required=False, type=float, default=1e-1, help="the loss_load of MoE")
@@ -103,7 +103,10 @@ parser.add_argument('--readout', required=False, default='rn_sum', choices=['avg
 parser.add_argument("--debug", default=False, action='store_true', help="debug model, only load few data.")
 
 opt = parser.parse_args()
+
 wandb.init(config=opt)
+wandb.run.name = opt.name
+wandb.save()
 config = wandb.config
 
 random.seed(opt.seed)
@@ -171,6 +174,7 @@ def main():
 
     # train & test
     trainer.train(opt.max_epochs, model, optimizer, scheduler, opt.name, opt.output_dir, tester, loss_fn, train_loader, valid_loader, test_loader, True, opt.scheduler, better_score_f)
+
 
 if __name__ == '__main__':
     main()

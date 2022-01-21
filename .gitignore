@@ -12,6 +12,7 @@ runs/
 log/
 slurm/
 Problem/
+wandb/
 *.pk
 *.p
 *.out
