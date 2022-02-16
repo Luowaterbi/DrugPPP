@@ -12,20 +12,23 @@ debug=--debug
 dataset_lst=MNSOL
 
 # ====== train & test setting ======
-if [ $dataset_lst = MNSOL ]; then
-  # seed_lst=(0 2 4)
-  # data_lst=(0 1 2)
-  seed_lst=(0)
-  data_lst=(0)
-elif [ $dataset_lst = TUM+Free ]; then
-  seed_lst=(42 100)
-  data_lst=(0 2 3 4)
-elif [ $dataset_lst = esol ]; then
-  seed_lst=(42 100 1000)
-  data_lst=(0 1 2 3 4)
-else
-  echo NO THIS DATASET
-fi
+# if [ $dataset_lst = MNSOL ]; then
+#   # seed_lst=(0 2 4)
+#   # data_lst=(0 1 2)
+#   seed_lst=(0)
+#   data_lst=(0)
+# elif [ $dataset_lst = TUM+Free ]; then
+#   seed_lst=(42 100)
+#   data_lst=(0 2 3 4)
+# elif [ $dataset_lst = esol ]; then
+#   seed_lst=(42 100 1000)
+#   data_lst=(0 1 2 3 4)
+# else
+#   echo NO THIS DATASET
+# fi
+seed1=42
+seed2=43
+
 
 lr_lst=(0.0005)
 # lr_lst=(0.001)
@@ -80,7 +83,7 @@ lambda_dst=0.33
 
 
 # --- interact setting ---
-interactor=$2
+interactor=rnsa
 # interactor=simple
 #interactor=rn
 #interactor=sa
@@ -107,10 +110,10 @@ inter_norm_type_lst=(layer_norm)
 att_block_lst=(none)
 
 # ------ MoE setting --------
-moe=--moe
-mix=--mix
-# moe_input_lst=(atom)  
-moe_input_lst=$3
+moe=1
+mix=1
+moe_input_lst=(atom)  
+# moe_input_lst=(atom mol_sum mol_avg)
 noisy_gating=
 num_experts_lst=(32)
 num_used_experts_lst=(4)
@@ -158,39 +161,27 @@ for dataset in ${dataset_lst[@]}; do
                                                 # for moe in ${moe_lst[@]}; do
                                                   for moe_input in ${moe_input_lst[@]}; do
 
-                                                    model_name=rnign_test_before_sweep
+                                                    model_name=rnign_debug_test_new_model.${moe_input}.5x2
                                                     # model_name=rnign.0108.relation_narrow_skip_moe
                                                     # model_name=rnign.overfit.right.readout_${readout}.bs_${train_batch_size}.ep_${epoch}.lr_${lr}.warmup_${warmup_proportion}${debug}${compare}
                                                     # model_name=rnign.0106.test_new_moe_with_moe_loss
                                                     runsdir=./runs/${dataset}/${model_name}
                                                     logdir=./log/${dataset}/${model_name}
+                                                    [ ! -d ${runsdir} ] && mkdir ${runsdir}
+                                                    [ ! -d ${logdir} ] && mkdir ${logdir}
+
                                                     
-                                                    if [ ! -d ${runsdir} ]; then
-                                                      mkdir ${runsdir}
-                                                    fi 
-                                                    if [ ! -d ${logdir} ]; then
-                                                      mkdir ${logdir}
-                                                    fi 
-
-                                                    for data in ${data_lst[@]}; do
-                                                      for seed in ${seed_lst[@]}; do
-
-                                                        file_mark=${dataset}_${data}.sd_${seed}
-                                                        modeldir=./runs/${dataset}/${model_name}/${file_mark}.model
-                                                        if [ ! -d ${modeldir} ];then
-                                                          mkdir ${modeldir}
-                                                        fi
+                                                        file_mark=${dataset}
+                                                        
                                                         echo [CLI]
                                                         echo Model: ${model_name}
                                                         echo Task: ${file_mark}
                                                         echo [CLI]
                                                         export OMP_NUM_THREADS=3 # threads num for each task
-                                                        CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} ${moe} ${mix} ${noisy_gating} \
+                                                        CUDA_VISIBLE_DEVICES=${gpu_list} python main.py ${debug} ${noisy_gating} \
                                                           --name ${model_name}_${file_mark} \
+                                                          --output_dir ./runs/${dataset}/${model_name}/${file_mark} \
                                                           --data_dir ./data/${dataset} \
-                                                          --output_dir ./runs/${dataset}/${model_name}/${file_mark}.model/ \
-                                                          --train_file train_${data}.csv \
-                                                          --valid_file val_${data}.csv \
                                                           --batch_size ${train_batch_size} \
                                                           --max_epochs ${epoch} \
                                                           --lr ${lr} \
@@ -213,6 +204,8 @@ for dataset in ${dataset_lst[@]}; do
                                                           --inter_res ${inter_res} \
                                                           --type_emb ${type_emb} \
                                                           --att_block ${att_block} \
+                                                          --mix ${mix} \
+                                                          --moe ${moe} \
                                                           --moe_input ${moe_input} \
                                                           --num_experts ${num_experts} \
                                                           --num_used_experts ${num_used_experts} \
@@ -224,13 +217,14 @@ for dataset in ${dataset_lst[@]}; do
                                                           --scheduler ${scheduler} \
                                                           --patience ${patience} \
                                                           --warmup_proportion ${warmup_proportion} \
-                                                          --seed ${seed} >./log/${dataset}/${model_name}/${file_mark}.log
+                                                          --seed1 ${seed1} \
+                                                          --seed2 ${seed2} \
+                                                          >./log/${dataset}/${model_name}/${file_mark}.log
                                                         echo [CLI]
                                                         echo Model: ${model_name}
                                                         echo Task: ${file_mark}
                                                         echo [CLI]
-                                                      done
-                                                    done
+
                                                     python scripts/MyStaff/cal_avg.py ./runs/${dataset}/${model_name}/best.txt
                                                   done
                                                 # done

@@ -41,6 +41,8 @@ parser.add_argument('--y2id_file', default='', help="y2id dict path")
 
 # ====== training setting ======
 parser.add_argument('--seed', required=False, type=int, default=0, help="random seed")
+parser.add_argument('--seed1', required=False, type=int, default=0, help="random seed")
+parser.add_argument('--seed2', required=False, type=int, default=1, help="random seed")
 parser.add_argument('--max_epochs', required=False, type=int, default=300, help="The max number of epochs for training")
 parser.add_argument('--batch_size', required=False, type=int, default=32, help="The batch size for training")
 parser.add_argument('--lr', required=False, type=float, default=0.0005, help="")
@@ -86,8 +88,10 @@ parser.add_argument('--att_block', required=False, default='none', choices=['non
 parser.add_argument('--inter_res', required=False, default='no_inter', choices=['cat', 'none', 'no_inter'], help="set residual connection between interaction's input and output")
 
 # ====== MoE setting ======
-parser.add_argument('--moe', default=False, action="store_true", help="whether use the MoE")
-parser.add_argument('--mix', default=False, action="store_true", help="whether use the mix gate")
+# parser.add_argument('--moe', default=False, action="store_true", help="whether use the MoE")
+# parser.add_argument('--mix', default=False, action="store_true", help="whether use the mix gate")
+parser.add_argument('--moe', default=0, type=int, help="whether use the MoE")
+parser.add_argument('--mix', default=0, type=int, help="whether use the mix gate")
 parser.add_argument('--moe_input', required=False, default='atom', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
 parser.add_argument('--noisy_gating', default=False, action="store_true", help="whether open the noisy gating")
 parser.add_argument('--num_experts', required=False, type=int, default=32, help="the num of experts")
@@ -107,30 +111,28 @@ opt = parser.parse_args()
 wandb.init(config=opt)
 wandb.run.name = opt.name
 wandb.save()
-config = wandb.config
-
-random.seed(opt.seed)
-np.random.seed(opt.seed)
-torch.manual_seed(opt.seed)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = torch.device("cpu")
-debug = opt.debug
-
-# load_ft = True
-load_ft = not opt.debug
-
-train_path = os.path.join(opt.data_dir, opt.train_file)
-valid_path = os.path.join(opt.data_dir, opt.valid_file)
-test_path = os.path.join(opt.data_dir, opt.test_file) if opt.test_file else None
-if opt.y2id_file:
-    with open(os.path.join(opt.data_dir, opt.y2id_file)) as reader:
-        dict_y2id = json.load(reader)
-        opt.num_tags = len(dict_y2id)
-else:
-    dict_y2id = None
 
 
 def main():
+    random.seed(opt.seed)
+    np.random.seed(opt.seed)
+    torch.manual_seed(opt.seed)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cpu")
+    debug = opt.debug
+
+    # load_ft = True
+    load_ft = not opt.debug
+
+    train_path = os.path.join(opt.data_dir, opt.train_file)
+    valid_path = os.path.join(opt.data_dir, opt.valid_file)
+    test_path = os.path.join(opt.data_dir, opt.test_file) if opt.test_file else None
+    if opt.y2id_file:
+        with open(os.path.join(opt.data_dir, opt.y2id_file)) as reader:
+            dict_y2id = json.load(reader)
+            opt.num_tags = len(dict_y2id)
+    else:
+        dict_y2id = None
     train_x1, train_x2, train_joint, train_y = load_raw_data(opt.task, train_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
     valid_x1, valid_x2, valid_joint, valid_y = load_raw_data(opt.task, valid_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
     # print("train_num={},valid_num={}".format(len(train_y), len(valid_y)))
@@ -138,7 +140,7 @@ def main():
         test_x1, test_x2, test_joint, test_y = load_raw_data(opt.task, test_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
 
     if debug:
-        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 100, 100, 100, 32, '[debug]' + opt.name
+        train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 50, 50, 20, 32, '[debug]' + opt.name
         train_x1, train_x2, train_joint, train_y = [d[:train_num] for d in (train_x1, train_x2, train_joint, train_y)]
         valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (valid_x1, valid_x2, valid_joint, valid_y)]
         # valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (train_x1, train_x2, train_joint, train_y)]
@@ -168,13 +170,43 @@ def main():
         better_score_f = lambda x, y: x > y
         metric_f = acc_metrics
 
-    wandb.watch(model, log="all")
+    wandb.watch(model, log=None)
     trainer = Trainer()
     tester = Tester(metric_func=metric_f)
 
     # train & test
-    trainer.train(opt.max_epochs, model, optimizer, scheduler, opt.name, opt.output_dir, tester, loss_fn, train_loader, valid_loader, test_loader, True, opt.scheduler, better_score_f)
+    return trainer.train(opt.max_epochs, model, optimizer, scheduler, opt.name, opt.output_dir, tester, loss_fn, train_loader, valid_loader, test_loader, True, opt.scheduler, better_score_f)
+
+
+def start():
+    avg_rmse, avg_mae = 0., 0.
+    seed_lst = [opt.seed1, opt.seed2]
+    output_dir = opt.output_dir
+    # for i in range(opt.max_epochs):
+    #     wandb.log({"epoch": i})
+    for split in range(5):
+        opt.train_file = "train_{}.csv".format(split)
+        opt.valid_file = "val_{}.csv".format(split)
+        for i, seed in enumerate(seed_lst):
+            file_mark = "_{}.sd_{}".format(split, seed)
+            opt.name = "sp" + file_mark
+            opt.output_dir = output_dir + file_mark + ".model/"
+            if not os.path.exists(opt.output_dir):
+                os.mkdir(opt.output_dir)
+            opt.seed = seed
+            rmse, mae, train_loss_too_large = main()
+            avg_rmse += rmse
+            avg_mae += mae
+            wandb.log({"best_rmse": rmse, "best_mae": mae})
+            # if train_loss_too_large:
+            #     count = split * len(seed_lst) + i + 1
+            #     avg_rmse = avg_rmse * 10. / count
+            #     avg_mae /= avg_rmse * 10. / count
+            #     break
+    avg_rmse /= 10
+    avg_mae /= 10
+    wandb.log({"avg_rmse": avg_rmse, "avg_mae": avg_mae})
 
 
 if __name__ == '__main__':
-    main()
+    start()

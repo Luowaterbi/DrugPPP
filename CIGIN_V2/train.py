@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import math
 import json
+import wandb
 
 mse_loss = torch.nn.MSELoss()
 mae_loss = torch.nn.L1Loss()
@@ -73,7 +74,10 @@ def train(max_epochs, model, optimizer, scheduler, train_loader, valid_loader, t
         val_rmse_score, val_loss, val_mae_score, val_pred = get_metrics(model, valid_loader)
         if type(scheduler) is torch.optim.lr_scheduler.ReduceLROnPlateau:
             scheduler.step(val_loss)
-        print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f}".format(epoch + 1, np.mean(np.array(running_loss)), val_loss, val_rmse_score, val_mae_score))
+        train_loss = np.mean(np.array(running_loss))
+        print("Epoch:{} Train Loss:{:.4f} Val Loss:{:.4f} Val RMSE Score:{:.4f} Val MAE Score:{:.4f}".format(epoch + 1, train_loss, val_loss, val_rmse_score, val_mae_score))
+        metrics = {project_name + "train_loss": train_loss, project_name + "val_rmse_loss": val_rmse_score, project_name + "val_mae_loss": val_mae_score}
+        wandb.log(metrics)
         # print("Epoch: " + str(epoch + 1) + "  train_loss " + str(np.mean(np.array(running_loss))) + " Val_loss " + str(
         #     val_loss) + " RMSE_Val_loss " + str(val_rmse_loss) + " ")
         if val_rmse_score < val_best_score["RMSE"]:
@@ -101,3 +105,5 @@ def train(max_epochs, model, optimizer, scheduler, train_loader, valid_loader, t
     with open(output_dir + "../best.txt", "a") as writer:
         writer.write("{};RMSE;{};{}\n".format(project_name, val_best_score["RMSE"], test_best_score["RMSE"] if test_loader else 0))
         writer.write("{};MAE;{};{}\n".format(project_name, val_best_score["MAE"], test_best_score["MAE"] if test_loader else 0))
+    wandb.log({project_name + "best_val_rmse_loss": val_best_score["RMSE"], project_name + "best_val_mae_loss": val_best_score["MAE"]})
+    return val_best_score["RMSE"], val_best_score["MAE"]

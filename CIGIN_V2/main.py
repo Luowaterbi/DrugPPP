@@ -3,6 +3,7 @@ import pandas as pd
 import warnings
 import os
 import argparse
+import wandb
 
 # rdkit imports
 from rdkit import RDLogger
@@ -14,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch
 
-#dgl imports
+# dgl imports
 import dgl
 
 # local imports
@@ -38,15 +39,16 @@ warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', default='cigin', help="The name of the current project: default: CIGIN")
-parser.add_argument('--output_dir', default='./runs/', help="dir of trained models")
-parser.add_argument('--data_dir', default='../data/MNSOL/', help="dir of data")
-parser.add_argument('--train_file', default='train_0.csv', help="train file path")
-parser.add_argument('--valid_file', default='val_0.csv', help="valid file path")
+parser.add_argument('--output_dir', required=False, default='./runs/', help="dir of trained models")
+parser.add_argument('--data_dir', required=False, default='../data/MNSOL/', help="dir of data")
+parser.add_argument('--train_file', required=False, default='train_0.csv', help="train file path")
+parser.add_argument('--valid_file', required=False, default='val_0.csv', help="valid file path")
 parser.add_argument('--test_file', required=False, default='', help="test file path")
 parser.add_argument('--interaction', help="type of interaction function to use: dot | scaled-dot | general | "
                     "tanh-general | self_att | none ", default='dot')
 parser.add_argument('--seed', required=False, type=int, default=0, help="")
-
+parser.add_argument('--seed1', required=False, type=int, default=0, help="random seed")
+parser.add_argument('--seed2', required=False, type=int, default=1, help="random seed")
 parser.add_argument('--max_epochs', required=False, type=int, default=100, help="The max number of epochs for training")
 parser.add_argument('--batch_size', required=False, type=int, default=32, help="The batch size for training")
 parser.add_argument('--lr', required=False, type=float, default=0.001, help="")
@@ -73,7 +75,7 @@ parser.add_argument(
 )
 parser.add_argument('--readout', required=False, default='set2set', help="")
 parser.add_argument('--pred_layer', required=False, default='linear', choices=['linear', 'bilinear'], help="")
-parser.add_argument('--sep_emb', required=False, default=False, action='store_true', help='')
+parser.add_argument('--sep_emb', required=False, default=True, action='store_true', help='')
 
 parser.add_argument('--load_param', required=False, default='cigin', choices=['cigin', 'ours'], help="")
 
@@ -84,6 +86,9 @@ args = parser.parse_args()
 random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
+wandb.init(config=args)
+wandb.run.name = args.name
+wandb.save()
 
 
 def collate(samples):
@@ -230,8 +235,31 @@ def main():
     else:
         raise ValueError("Wrong choice for scheduler")
     print(args)
-    train(max_epochs, model, optimizer, scheduler, train_loader, valid_loader, test_loader, project_name, output_dir)
+    wandb.watch(model, log=None)
+    return train(max_epochs, model, optimizer, scheduler, train_loader, valid_loader, test_loader, project_name, output_dir)
+
+
+def start():
+    avg_rmse, avg_mae = 0., 0.
+    seed_lst = [args.seed1, args.seed2]
+    output_dir = args.output_dir
+    for split in range(5):
+        args.train_file = "train_{}.csv".format(split)
+        args.valid_file = "val_{}.csv".format(split)
+        for seed in seed_lst:
+            file_mark = "_{}.sd_{}".format(split, seed)
+            args.name = "sp" + file_mark
+            args.output_dir = output_dir + file_mark + ".model/"
+            if not os.path.exists(args.output_dir):
+                os.mkdir(args.output_dir)
+            args.seed = seed
+            rmse, mae = main()
+            avg_rmse += rmse
+            avg_mae += mae
+    avg_rmse /= 10
+    avg_mae /= 10
+    wandb.log({"avg_rmse": avg_rmse, "avg_mae": avg_mae})
 
 
 if __name__ == '__main__':
-    main()
+    start()

@@ -74,11 +74,35 @@ def make_model(opt):
     # print("MoE=", opt.moe)
     if opt.moe:
         print("built moe")
-        Solu_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
-        Solv_MOE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
+        Solu_MoE = MoE(input_size=opt.d_model,
+                       output_size=opt.d_model,
+                       num_experts=opt.num_experts,
+                       hidden_size=opt.d_model * 2,
+                       noisy_gating=opt.noisy_gating,
+                       k=opt.num_used_experts,
+                       loss_coef=opt.moe_loss_coef,
+                       dropout=opt.moe_dropout,
+                       name=opt.name + ".Solu")
+        Solv_MOE = MoE(input_size=opt.d_model,
+                       output_size=opt.d_model,
+                       num_experts=opt.num_experts,
+                       hidden_size=opt.d_model * 2,
+                       noisy_gating=opt.noisy_gating,
+                       k=opt.num_used_experts,
+                       loss_coef=opt.moe_loss_coef,
+                       dropout=opt.moe_dropout,
+                       name=opt.name + ".Solv")
         if opt.mix:
             print("built mix moe")
-            Mix_MoE = MoE(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, noisy_gating=opt.noisy_gating, k=opt.num_used_experts, loss_coef=opt.moe_loss_coef, dropout=opt.moe_dropout)
+            Mix_MoE = MoE(input_size=opt.d_model,
+                          output_size=opt.d_model,
+                          num_experts=opt.num_experts,
+                          hidden_size=opt.d_model * 2,
+                          noisy_gating=opt.noisy_gating,
+                          k=opt.num_used_experts,
+                          loss_coef=opt.moe_loss_coef,
+                          dropout=opt.moe_dropout,
+                          name=opt.name + ".Mix")
         else:
             Mix_MoE = None
     else:

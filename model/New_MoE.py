@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from torch.distributions.normal import Normal
 import torch.nn.functional as F
+import wandb
 
 
 def get_norm_and_cos(a, b):
@@ -66,7 +67,7 @@ class MoE(nn.Module):
     loss_coef: a scalar - multiplier on load-balancing losses
     """
 
-    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=False, k=4, loss_coef=1e-2, dropout=0.1):
+    def __init__(self, input_size, output_size, num_experts, hidden_size, noisy_gating=False, k=4, loss_coef=1e-2, dropout=0.1, name="default"):
         super(MoE, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # self.device = torch.device("cpu")
@@ -76,6 +77,7 @@ class MoE(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.k = k
+        self.name = name + ".moe_loss"
 
         self.experts = nn.ModuleList([MLP(self.input_size, self.hidden_size, self.output_size) for i in range(self.num_experts)])
 
@@ -125,7 +127,7 @@ class MoE(nn.Module):
             moe_loss = importance.var() / (importance.mean()**2 + eps)
         else:
             moe_loss = 0
-
+        wandb.log({self.name: moe_loss})
         moe_loss = moe_loss * self.loss_coef
 
         experts_index = torch.nonzero(gates, as_tuple=True)  # [num_used_experts, len(gates.shape)]
@@ -147,10 +149,7 @@ class MoE(nn.Module):
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
         experts_output = torch.cat(experts_output)  # [nus, output_size]
         experts_output = experts_output * experts_gate.unsqueeze(-1)  # [nus, output_size]
-        # zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).cpu()  # [batch_size, ..., output_size]
-        # zeros[experts_from] += experts_output.cpu()
         zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size).to(self.device)  # [batch_size, ..., output_size]
         zeros[experts_batch_from, experts_atom_from] += experts_output
         zeros = self.dropout(zeros) + x
         return zeros, moe_loss
-        # return x, 0

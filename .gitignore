@@ -13,6 +13,7 @@ log/
 slurm/
 Problem/
 wandb/
+local/
 *.pk
 *.p
 *.out
