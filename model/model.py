@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from model.graph_transformer import GraphTransformer, make_graph_transformer, Embeddings
 from torch.autograd import Variable
 from torch.nn.init import _calculate_fan_in_and_fan_out, _no_grad_normal_, _no_grad_uniform_
-from model.New_MoE import MoE
+from model.New_MoE import MoE, MLPP
 
 
 # ====== Model definition ======
@@ -73,41 +73,48 @@ def make_model(opt):
     # make MoE
     # print("MoE=", opt.moe)
     if opt.moe:
-        print("built moe")
-        Solu_MoE = MoE(input_size=opt.d_model,
-                       output_size=opt.d_model,
-                       num_experts=opt.num_experts,
-                       hidden_size=opt.d_model * 2,
-                       noisy_gating=opt.noisy_gating,
-                       k=opt.num_used_experts,
-                       loss_coef=opt.moe_loss_coef,
-                       dropout=opt.moe_dropout,
-                       name=opt.name + ".Solu")
-        Solv_MOE = MoE(input_size=opt.d_model,
-                       output_size=opt.d_model,
-                       num_experts=opt.num_experts,
-                       hidden_size=opt.d_model * 2,
-                       noisy_gating=opt.noisy_gating,
-                       k=opt.num_used_experts,
-                       loss_coef=opt.moe_loss_coef,
-                       dropout=opt.moe_dropout,
-                       name=opt.name + ".Solv")
+        if opt.mlp:
+            Solu_MoE = MLPP(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, dropout=opt.moe_dropout)
+            Solv_MoE = MLPP(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, dropout=opt.moe_dropout)
+        else:
+            print("built moe")
+            Solu_MoE = MoE(input_size=opt.d_model,
+                           output_size=opt.d_model,
+                           num_experts=opt.num_experts,
+                           hidden_size=opt.d_model * 2,
+                           noisy_gating=opt.noisy_gating,
+                           k=opt.num_used_experts,
+                           loss_coef=opt.moe_loss_coef,
+                           dropout=opt.moe_dropout,
+                           name=opt.name + ".Solu")
+            Solv_MoE = MoE(input_size=opt.d_model,
+                           output_size=opt.d_model,
+                           num_experts=opt.num_experts,
+                           hidden_size=opt.d_model * 2,
+                           noisy_gating=opt.noisy_gating,
+                           k=opt.num_used_experts,
+                           loss_coef=opt.moe_loss_coef,
+                           dropout=opt.moe_dropout,
+                           name=opt.name + ".Solv")
         if opt.mix:
-            print("built mix moe")
-            Mix_MoE = MoE(input_size=opt.d_model,
-                          output_size=opt.d_model,
-                          num_experts=opt.num_experts,
-                          hidden_size=opt.d_model * 2,
-                          noisy_gating=opt.noisy_gating,
-                          k=opt.num_used_experts,
-                          loss_coef=opt.moe_loss_coef,
-                          dropout=opt.moe_dropout,
-                          name=opt.name + ".Mix")
+            if opt.mlp:
+                Mix_MoE = MLPP(input_size=opt.d_model, output_size=opt.d_model, num_experts=opt.num_experts, hidden_size=opt.d_model * 2, dropout=opt.moe_dropout)
+            else:
+                print("built mix moe")
+                Mix_MoE = MoE(input_size=opt.d_model,
+                              output_size=opt.d_model,
+                              num_experts=opt.num_experts,
+                              hidden_size=opt.d_model * 2,
+                              noisy_gating=opt.noisy_gating,
+                              k=opt.num_used_experts,
+                              loss_coef=opt.moe_loss_coef,
+                              dropout=opt.moe_dropout,
+                              name=opt.name + ".Mix")
         else:
             Mix_MoE = None
     else:
         Solu_MoE = None
-        Solv_MOE = None
+        Solv_MoE = None
         Mix_MoE = None
 
     # make readout
@@ -131,7 +138,7 @@ def make_model(opt):
     else:
         raise NotImplementedError('Wrong decoder type: {}'.format(opt.decoder))
 
-    model = SAIGNModel(opt, encoder, interactor, Solu_MoE, Solv_MOE, Mix_MoE, decoder)
+    model = SAIGNModel(opt, encoder, interactor, Solu_MoE, Solv_MoE, Mix_MoE, decoder)
     # print(model)
     # Initialization
     # This was important from MAT and older code. e.g Initialize parameters with Glorot / fan_avg.
@@ -176,7 +183,6 @@ class GTEncoder(nn.Module):
     A single Graph Transformer Encoder (GT), for joint input.
     f: joint_x1_x2 -> x1_x2_feature
     """
-
     def __init__(self,
                  opt,
                  d_features,
@@ -225,7 +231,6 @@ class PGTEncoder(nn.Module):
     A Pair-wise Graph Transformer (PGT) encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
-
     def __init__(self,
                  opt,
                  d_features,
@@ -294,7 +299,6 @@ class MLPEncoder(nn.Module):
     A pair-wise encoder that consists of two separated / one shared Graph Transformer Encoder.
     f: (x1, x2) -> (x1_feature, x2_feature)
     """
-
     def __init__(self, opt, d_features, d_model=128, dropout=0.1, pair_type='share'):
         super(MLPEncoder, self).__init__()
         self.opt = opt
@@ -327,7 +331,6 @@ class RNInteractor(nn.Module):
             f: joint_features -> (x1', x2', I),
         where x1', x2' are interacted features and I is relation features (relation_node_features).
         """
-
     def __init__(self, opt, *args, **kwargs):
         super(RNInteractor, self).__init__()
 
@@ -359,7 +362,6 @@ class SAInteractor(nn.Module):
     f: (x1, x2) -> (x1', x2', I),
     where x1', x2' are interacted features and I is relation features.
     """
-
     def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
         super(SAInteractor, self).__init__()
 
@@ -437,7 +439,6 @@ class SAInteractor(nn.Module):
 
 class RNSAInteractor(SAInteractor):
     """ Self-attentive interactor with relation node """
-
     def __init__(self, opt, n_layer=2, d_model=128, n_head=4, d_mlp=128, dropout=0.1, norm_type='layer_norm', type_emb='sep', att_block='none', res_interact='none'):
         super(RNSAInteractor, self).__init__(opt, n_layer, d_model, n_head, d_mlp, dropout, norm_type, type_emb, att_block, res_interact)
         self.relation_emb = nn.Parameter(torch.randn(d_model, dtype=torch.float), requires_grad=True)
@@ -488,7 +489,6 @@ class RNSAInteractor(SAInteractor):
 
 
 class SimpleInteractor(nn.Module):
-
     def __init__(self, res_interact):
         super(SimpleInteractor, self).__init__()
         self.res_interact = res_interact
@@ -513,7 +513,6 @@ class SimpleInteractor(nn.Module):
 
 
 class Set2Set(nn.Module):
-
     def __init__(self, input_dim, hidden_dim, act_fn=nn.ReLU, num_layers=1):
         '''
         Args:
@@ -581,7 +580,6 @@ def masked_sum(features, mask, dim):
 
 class ReadoutLayer(nn.Module):
     """ readout pair-wise features """
-
     def __init__(self, d_input, mix_moe=False, readout='avg'):
         super(ReadoutLayer, self).__init__()
         self.readout = readout
@@ -651,7 +649,6 @@ class ReadoutLayer(nn.Module):
 
 class RegressionDecoder(nn.Module):
     """ readout feature and make predictions """
-
     def __init__(self, d_input, readout):
         super(RegressionDecoder, self).__init__()
         self.readout = readout
@@ -683,7 +680,6 @@ class RegressionDecoder(nn.Module):
 
 class ClassificationDecoder(nn.Module):
     """ readout feature and make predictions """
-
     def __init__(self, d_input, readout, num_tags):
         super(ClassificationDecoder, self).__init__()
         self.readout = readout
@@ -724,7 +720,6 @@ class SAIGNModel(nn.Module):
     """
     Self Attentive Interaction Graph Network for pair-wise prediction: f: (x1, x2) -> y
     """
-
     def __init__(self, opt, encoder, interactor, Solu_MoE, Solv_MoE, Mix_MoE, decoder):
         super(SAIGNModel, self).__init__()
         self.opt = opt
@@ -757,7 +752,7 @@ class SAIGNModel(nn.Module):
                 cat_features, cat_mask = moe_input_process(self.opt.moe_input, cat_features, cat_mask)
                 # if _print:
                 #     print("Mix_MoE:")
-                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, train=self.training, _print=_print)
+                relation_features, rn_moe_loss = self.Mix_MoE(cat_features, cat_mask, _print=_print)
             else:
                 rn_moe_loss = 0
         else:
@@ -768,10 +763,10 @@ class SAIGNModel(nn.Module):
             x2_moe_features, mask2 = moe_input_process(self.opt.moe_input, x2_features, mask2)
             # if _print:
             #     print('Solu_MoE:')
-            x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, train=self.training, _print=_print)
+            x1_features, x1_moe_loss = self.Solu_MoE(x1_moe_features, mask1, _print=_print)
             # if _print:
             #     print('Solv_MoE:')
-            x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, train=self.training, _print=_print)
+            x2_features, x2_moe_loss = self.Solv_MoE(x2_moe_features, mask2, _print=_print)
         else:
             x1_moe_loss = 0
             x2_moe_loss = 0

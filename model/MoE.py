@@ -247,14 +247,13 @@ class MoE(nn.Module):
         experts_gate = experts_gate[index_sorted_experts]  # [nus]
         experts_count = list(gates.reshape(-1, self.num_experts).count_nonzero(0))  # [num_epxerts]
         if _print:
-            print("train={},experts_count={}".format(train, [i.tolist() for i in experts_count]))
-            print("\n")
+            print("train={},experts_count={}\n".format(train, [i.tolist() for i in experts_count]))
         experts_input = x[experts_batch_from, experts_atom_from]  # [nus, input_size]
         experts_input = torch.split(experts_input, experts_count, 0)
         experts_output = [self.experts[i](experts_input[i]) for i in range(self.num_experts)]
         experts_output = torch.cat(experts_output)  # [nus, output_size]
-        experts_output *= experts_gate.unsqueeze(-1)  # [nus, output_size]
+        experts_output = experts_output * experts_gate.unsqueeze(-1)  # [nus, output_size]
         zeros = torch.zeros(x.shape[0], x.shape[1], self.output_size, requires_grad=True).to(self.device)  # [batch_size, ..., output_size]
         zeros[experts_batch_from, experts_atom_from] += experts_output
-        zeros = self.dropout(self.sigmod(zeros)) + x
+        zeros = self.dropout(zeros) + x
         return zeros, loss

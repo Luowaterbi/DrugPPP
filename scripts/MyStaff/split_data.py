@@ -15,11 +15,14 @@ all_data = all_data[1:]
 all_data_len = len(all_data)
 train_num = int(all_data_len * train_rate) + 1
 val_num = all_data_len - train_num if train_rate + val_rate == 1.0 else int(all_data_len * val_rate) + 1
-for i in range(5):
+for i in range(1):
     random.shuffle(all_data)
-    train_path = path + "train_" + str(i) + ".csv"
-    val_path = path + "val_" + str(i) + ".csv"
-    test_path = path + "test_" + str(i) + ".csv"
+    # train_path = path + "train_" + str(i) + ".csv"
+    # val_path = path + "val_" + str(i) + ".csv"
+    # test_path = path + "test_" + str(i) + ".csv"
+    train_path = path + "train_" + str(4) + ".csv"
+    val_path = path + "val_" + str(4) + ".csv"
+    test_path = path + "test_" + str(4) + ".csv"
     with open(train_path, 'w') as writer:
         writer.writelines([title] + all_data[:train_num])
     with open(val_path, 'w') as writer:

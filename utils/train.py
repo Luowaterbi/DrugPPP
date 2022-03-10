@@ -38,9 +38,9 @@ class Trainer:
                 loss = model_loss + moe_loss
                 loss.backward()
                 # if i < 3 or train_loader_len - i <= 3:
-                #     print("solu moe grad=", model.Solu_MoE.w_gate.grad.sum(0).tolist())
-                #     print("solv moe grad=", model.Solv_MoE.w_gate.grad.sum(0).tolist())
-                #     print("mix moe grad=", model.Mix_MoE.w_gate.grad.sum(0).tolist())
+                # print("solu moe grad=", model.Solu_MoE.w_gate.grad.sum(0).tolist())
+                # print("solv moe grad=", model.Solv_MoE.w_gate.grad.sum(0).tolist())
+                # print("mix moe grad=", model.Mix_MoE.w_gate.grad.sum(0).tolist())
 
                 optimizer.step()
                 running_loss.append(loss.cpu().detach())
@@ -69,6 +69,7 @@ class Trainer:
                 if test_loader:
                     test_rmse_score, test_loss, test_mae_score, test_pred = tester.test(model, test_loader)
                     test_best_score["RMSE"] = test_rmse_score
+                    wandb.log({project_name + "test_rmse_loss": test_rmse_score})
                     with open(output_dir + "test_pred_RMSE.json", 'w') as writer:
                         json.dump(test_pred, writer)
             if better_score(val_mae_score, val_best_score["MAE"]):
@@ -80,6 +81,7 @@ class Trainer:
                 if test_loader:
                     test_rmse_score, test_loss, test_mae_score, test_pred = tester.test(model, test_loader)
                     test_best_score["MAE"] = test_mae_score
+                    wandb.log({project_name + "test_mae_loss": test_mae_score})
                     with open(output_dir + "test_pred_MAE.json", 'w') as writer:
                         json.dump(test_pred, writer)
         # with open(output_dir + "train_loss.json", 'w') as writer:
@@ -88,8 +90,7 @@ class Trainer:
         with open(output_dir + "../best.txt", "a") as writer:
             writer.write("{};RMSE;{};{}\n".format(project_name, val_best_score["RMSE"], test_best_score["RMSE"] if test_loader else 0))
             writer.write("{};MAE;{};{}\n".format(project_name, val_best_score["MAE"], test_best_score["MAE"] if test_loader else 0))
-        wandb.log({project_name + "best_val_rmse_loss": val_best_score["RMSE"], project_name + "best_val_mae_loss": val_best_score["MAE"]})
-        return val_best_score["RMSE"], val_best_score["MAE"], train_loss[-1] > 3
+        return val_best_score["RMSE"], val_best_score["MAE"], test_best_score["RMSE"] if test_loader else 0, test_best_score["MAE"] if test_loader else 0, train_loss[-1] > 3
 
 
 def make_optimizer_scheduler(opt, model, train_steps):

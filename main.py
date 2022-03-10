@@ -93,7 +93,8 @@ parser.add_argument('--inter_res', required=False, default='no_inter', choices=[
 parser.add_argument('--moe', default=0, type=int, help="whether use the MoE")
 parser.add_argument('--mix', default=0, type=int, help="whether use the mix gate")
 parser.add_argument('--moe_input', required=False, default='atom', choices=['atom', 'mol_avg', 'mol_sum'], help="determine the experts based on atoms or molecule")
-parser.add_argument('--noisy_gating', default=False, action="store_true", help="whether open the noisy gating")
+parser.add_argument('--mlp', required=False, default=0, type=int, help="whether use pure mlp")
+parser.add_argument('--noisy_gating', required=False, default=0, type=int, help="whether open the noisy gating")
 parser.add_argument('--num_experts', required=False, type=int, default=32, help="the num of experts")
 parser.add_argument('--num_used_experts', required=False, type=int, default=4, help="the num of used experts")
 parser.add_argument('--moe_loss_coef', required=False, type=float, default=1e-1, help="the loss_load of MoE")
@@ -108,6 +109,7 @@ parser.add_argument("--debug", default=False, action='store_true', help="debug m
 
 opt = parser.parse_args()
 
+# wandb.init(config=opt, mode="disabled")
 wandb.init(config=opt)
 wandb.run.name = opt.name
 wandb.save()
@@ -140,6 +142,7 @@ def main():
         test_x1, test_x2, test_joint, test_y = load_raw_data(opt.task, test_path, not opt.no_dummy, True, load_ft, opt.rn, opt.rn_dst, opt.cross_dst, dict_y2id, debug)
 
     if debug:
+        # os.environ['WANDB_MODE'] = 'offline'  # debug时不上传wandb
         train_num, valid_num, opt.max_epochs, opt.batch_size, opt.name = 50, 50, 20, 32, '[debug]' + opt.name
         train_x1, train_x2, train_joint, train_y = [d[:train_num] for d in (train_x1, train_x2, train_joint, train_y)]
         valid_x1, valid_x2, valid_joint, valid_y = [d[:valid_num] for d in (valid_x1, valid_x2, valid_joint, valid_y)]
@@ -170,7 +173,7 @@ def main():
         better_score_f = lambda x, y: x > y
         metric_f = acc_metrics
 
-    wandb.watch(model, log=None)
+    wandb.watch(model)
     trainer = Trainer()
     tester = Tester(metric_func=metric_f)
 
@@ -179,33 +182,43 @@ def main():
 
 
 def start():
-    avg_rmse, avg_mae = 0., 0.
+    val_avg_rmse, val_avg_mae, test_avg_rmse, test_avg_mae = 0., 0., 0., 0.
     seed_lst = [opt.seed1, opt.seed2]
-    output_dir = opt.output_dir
-    # for i in range(opt.max_epochs):
-    #     wandb.log({"epoch": i})
+    output_dir = opt.output_dir + opt.name + "/"
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     for split in range(5):
         opt.train_file = "train_{}.csv".format(split)
         opt.valid_file = "val_{}.csv".format(split)
+        if opt.test_file:
+            opt.test_file = "test_{}.csv".format(split)
         for i, seed in enumerate(seed_lst):
-            file_mark = "_{}.sd_{}".format(split, seed)
-            opt.name = "sp" + file_mark
-            opt.output_dir = output_dir + file_mark + ".model/"
+            opt.name = ".sp_{}.sd_{}".format(split, seed)
+            # opt.name = "sp" + file_mark
+            opt.output_dir = output_dir + opt.name + ".model/"
             if not os.path.exists(opt.output_dir):
                 os.mkdir(opt.output_dir)
             opt.seed = seed
-            rmse, mae, train_loss_too_large = main()
-            avg_rmse += rmse
-            avg_mae += mae
-            wandb.log({"best_rmse": rmse, "best_mae": mae})
+            val_rmse, val_mae, test_rmse, test_mae, train_loss_too_large = main()
+            val_avg_rmse += val_rmse
+            val_avg_mae += val_mae
+            wandb.log({"val_best_rmse": val_rmse, "val_best_mae": val_mae})
+            if opt.test_file:
+                test_avg_rmse += test_rmse
+                test_avg_mae += test_mae
+                wandb.log({"test_best_rmse": test_rmse, "test_best_mae": test_mae})
             # if train_loss_too_large:
             #     count = split * len(seed_lst) + i + 1
-            #     avg_rmse = avg_rmse * 10. / count
-            #     avg_mae /= avg_rmse * 10. / count
+            #     val_avg_rmse = val_avg_rmse * 10. / count
+            #     val_avg_mae /= val_avg_rmse * 10. / count
             #     break
-    avg_rmse /= 10
-    avg_mae /= 10
-    wandb.log({"avg_rmse": avg_rmse, "avg_mae": avg_mae})
+    val_avg_rmse /= 10
+    val_avg_mae /= 10
+    wandb.log({"val_avg_rmse": val_avg_rmse, "val_avg_mae": val_avg_mae})
+    if opt.test_file:
+        test_avg_rmse /= 10
+        test_avg_mae /= 10
+        wandb.log({"test_avg_rmse": test_avg_rmse, "test_avg_mae": test_avg_mae})
 
 
 if __name__ == '__main__':
